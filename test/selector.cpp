@@ -6,6 +6,7 @@
 
 
 
+
 TEST_CASE("Selector", "[selector]"){
   using namespace fluxpp;
   auto S = Selector<int>("asdf");

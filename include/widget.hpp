@@ -7,21 +7,13 @@
 #include <type_traits>
 
 #include  "selector.hpp"
+#include "basic.hpp"
+#include "context.hpp"
 
 namespace fluxpp {
-  template <class ... arg_ts_>
-  using  template_list = std::tuple <arg_ts_ ... >;  
 
   using widget_id_t = int64_t ;
   
-  enum class WidgetType{
-    Application,
-    Client,
-    Visual2D
-  };
-
-  template <WidgetType >
-  class Context;
 
   template <WidgetType, class >
   class Widget ;
