@@ -4,10 +4,11 @@
 #include "context_base.hpp"
 
 namespace fluxpp{
-  template<>
+
+  template <>
   class Context<WidgetType::Application>{
   public:
-    
+    Context(RenderNode* , RenderTree* ){};
     
   };
 

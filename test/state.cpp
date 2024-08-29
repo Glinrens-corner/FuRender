@@ -28,18 +28,16 @@ TEST_CASE("test ReducingStateSlice", "[StateSlice]"){
   };
 
   int i=0;
-  auto  t = create_state_slice([]()->int{return 1;})
+  std::unique_ptr<StateSlice>  u_ptr = create_state_slice([]()->int{return 1;})
     .with_data_reducer<int>(NoCopyReducer(&i))
-    .make_shared_ptr();
+    .make_unique_ptr();
 
-  
-  std::shared_ptr<StateSlice> ss_ptr = t;
   DataEvent<int> event{};
   event.data=4;
   EventEnvelope envelope{};
   envelope.event = &event;
   
   StateDispatchVisitor visitor(envelope);
-  ss_ptr->accept(visitor);
+  u_ptr->accept_dispatch_visitor(visitor);
   CHECK(4 == i);
 }

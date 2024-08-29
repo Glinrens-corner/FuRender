@@ -4,6 +4,8 @@
 #include "basic.hpp"
 
 namespace fluxpp{
+  class RenderNode;
+  class RenderTree;
 
   template <WidgetType >
   class Context;

@@ -21,7 +21,7 @@ namespace fluxpp{
 
     /** @brief get the path to the state
      */
-    const std::string & path(){
+    const std::string & path() const{
       return this->path_;
     }
   private:

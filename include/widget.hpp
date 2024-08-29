@@ -10,55 +10,44 @@
 #include <optional>
 #include <utility>
 
+
+#include "render_visitor.hpp"
 #include "selector.hpp"
 #include "basic.hpp"
 #include "context.hpp"
+#include "id_types.hpp"
 
 namespace fluxpp {
 
-  using widget_id_t = uint64_t ;
 
-  template<WidgetType widget_type_>
-  class RenderVisitor{
+  class BaseWidget {
+    private:
+    widget_id_t widget_id_ ;
   public:
-    template< class T>
-    void render(T*){};
-    
-  };
+    BaseWidget(widget_id_t widget_id):widget_id_(widget_id){}
+    virtual  void accept(RenderVisitor &  visitor)=0;
+    virtual ~BaseWidget()=default;
 
-  template<WidgetType widget_type_, class return_t_>
-  class TypedRenderVisitor{
-  public:
-    template< class T>
-    return_t_ render(T*){
-      if constexpr (std::is_same_v<return_t_,void>){
-	return;
-      } else {
-	return {};
-      }
-    };
-    
+
+    widget_id_t get_widget_id(){
+      return this->widget_id_;
+    }
   };
   
 
   template <WidgetType widget_type_>
-  class ErasedWidget{
-  private:
-    widget_id_t widget_id_ ;
+  class DeferredWidget:public BaseWidget{
   public:
-    ErasedWidget(widget_id_t widget_id):widget_id_(widget_id){}
-    virtual  void accept(RenderVisitor<widget_type_> &  visitor)=0;
-    virtual ~ErasedWidget()=default;
+    DeferredWidget(widget_id_t widget_id):BaseWidget(widget_id){};
   };
 
     
   template <WidgetType widget_type_, class return_t_  >
-  class Widget : public ErasedWidget<widget_type_>{
+  class Widget : public DeferredWidget<widget_type_>{
   public:
-    Widget(widget_id_t widget_id):ErasedWidget<widget_type_>(widget_id){}
+    Widget(widget_id_t widget_id):DeferredWidget<widget_type_>(widget_id){}
     
     
-    virtual  return_t_ typed_accept(TypedRenderVisitor<widget_type_, return_t_ > &  visitor)=0;
    
   };
 
@@ -71,7 +60,8 @@ namespace fluxpp {
   class WidgetImpl<widget_type_, render_fn_t_ , return_t_(Context<widget_type_>&, const arg_ts_ &...)> final:
     public Widget<widget_type_, return_t_>{
   public:
-    
+    using return_t = return_t_;
+    using args_tuple_t = std::tuple<  arg_ts_ ...>;
   private:
     render_fn_t_ render_fn_;
     std::tuple<Selector<arg_ts_>...> selectors_ ;
@@ -86,18 +76,18 @@ namespace fluxpp {
     {}
 
 
-      
-    void accept(RenderVisitor<widget_type_> & visitor) final override{
-      visitor.render(this);
+
+    constexpr static WidgetType get_widget_type(){
+      return widget_type_;
     }
 
 
     
-    return_t_ typed_accept(TypedRenderVisitor<widget_type_, return_t_ > & visitor) final override{
-      return visitor.render(this);  
+    void accept(RenderVisitor & visitor) final override{
+      visitor.render(*this);
     }
 
-    
+
     
     std::optional<std::string_view> get_nth_selector_address(std::size_t i){
       return get_nth_selector_address_i( i);
@@ -200,11 +190,10 @@ namespace fluxpp {
   }
 
   template <WidgetType widget_type_, class ... arg_ts_>
-  detail::WidgetBuilderStage1<widget_type_, arg_ts_ ...>
-  create_widget_with_selectors(Selector<arg_ts_>... selectors){
+  detail::WidgetBuilderStage1<widget_type_, arg_ts_ ...> create_widget_with_selectors(Selector<arg_ts_>... selectors){
     return detail::WidgetBuilderStage1<widget_type_, arg_ts_...>(std::move(selectors)...);
   }
   
-}  
+}
 
 #endif // FLUXPP_WIDGET_HPP
