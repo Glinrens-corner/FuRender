@@ -31,25 +31,24 @@ TEST_CASE("simple render ()", "[render,State,Widget,RenderVisitor]"){
 TEST_CASE("simple render ( int )", "[render,State,Widget,RenderVisitor]"){
   using namespace fluxpp;
   int i = 0;
+  auto slice = create_state_slice<int>(4)
+    .with_data_reducer<int>([](fluxpp::StateContext<int>& context, const int &new_int){
+      context.update_state(new_int);
+    }).make_unique_ptr();
+
+  auto addressor = slice->create_addressor("here");
   
-  auto widget = create_widget_with_selectors<fluxpp::WidgetType::Application>( Selector<int>("here"))
+  auto widget = create_widget_with_selectors<fluxpp::WidgetType::Application>( addressor.create_selector())
     .with_render_function([&i ](Context<WidgetType::Application>&, const int here_value){
-      std::cout << "updating value from:" << i << " to:" << here_value<< std::endl; 
       i=here_value;
       return None::none;
     })
     .make_shared();
   
-  auto slice = create_state_slice([](){
-    std::cout << "initialized " << std::endl;
-    return 4;})
-    .with_data_reducer<int>([](fluxpp::StateContext<int>& context, const int &new_int){
-      context.update_state(new_int);
-    }).make_unique_ptr();
   
   
   State state{};
-  state.set_state_slice("here",std::move(slice));
+  state.set_state_slice(addressor,std::move(slice));
   RenderNode node{};
   node.widget = widget;
   RenderVisitor visitor(&state, &node, nullptr) ;

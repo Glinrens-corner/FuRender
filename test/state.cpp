@@ -28,10 +28,11 @@ TEST_CASE("test ReducingStateSlice", "[StateSlice]"){
   };
 
   int i=0;
-  std::unique_ptr<StateSlice>  u_ptr = create_state_slice([]()->int{return 1;})
+  auto u_ptr = create_state_slice(static_cast<int>(1))
     .with_data_reducer<int>(NoCopyReducer(&i))
     .make_unique_ptr();
 
+  
   DataEvent<int> event{};
   event.data=4;
   EventEnvelope envelope{};

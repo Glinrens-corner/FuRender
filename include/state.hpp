@@ -105,7 +105,7 @@ namespace fluxpp{
   protected:
     state_t state_{};
   public:
-    explicit TypedStateSlice(state_t state):StateSlice(),state_t_(std::move(state)){  
+    explicit TypedStateSlice(state_t state):StateSlice(),state_(std::move(state)){  
     }
 
 
@@ -137,52 +137,51 @@ namespace fluxpp{
   
 
   
-  template<class ,class   ,class,  UpdateType=UpdateType::ChangingOnEvent>
+  template<class, class,  UpdateType=UpdateType::ChangingOnEvent>
   class ReducingStateSlice;
 
 
 
-  template<class state_t_, class initializer_t_, class...invocation_ts_, class ... event_ts_,class... callable_ts_, UpdateType update_type_ >
+  template<class state_t_, class...invocation_ts_, class ... event_ts_,class... callable_ts_, UpdateType update_type_ >
   class ReducingStateSlice<
     state_t_,
-    initializer_t_,
     template_list<
       template_list<event_ts_ ...>,
       template_list<invocation_ts_...>,
       template_list<callable_ts_...>> ,
       update_type_>:  public TypedStateSlice<state_t_>{
+  public:
+      using addressor_t = Addressor<state_t_, event_ts_...>; 
   private:
-    initializer_t_ initializer_;
     std::tuple<callable_ts_...> reducers_;
     
   public:
-    ReducingStateSlice(
-		       initializer_t_&& initializer,
+    ReducingStateSlice(state_t_ initial_value,
 		       std::tuple<callable_ts_...> reducers):
-      TypedStateSlice<state_t_>(),
-      initializer_(std::move(initializer)),
+      TypedStateSlice<state_t_>(std::move(initial_value)),
       reducers_(std::move(reducers)){};
-    
-    void initialize(){
-      this->state_ =  this->initializer_();
-    }
     
     void accept_dispatch_visitor(StateDispatchVisitor& visitor) override final{
       visitor.visit(this);
     }
 
+
+    
     void handle_event(StateContext< state_t_ > & context, const EventEnvelope& envelope ){
       try_next_handler<0>(context, envelope);
     }
 
 
-
+    
     static constexpr UpdateType update_type(){
       return update_type_;
     }
 
 
-    
+
+    static addressor_t create_addressor(std::string path){
+      return {std::move(path)};
+    }
   private:
     template <std::size_t i>
     typename std::enable_if<i < sizeof...(callable_ts_), void>::type
@@ -248,7 +247,7 @@ namespace fluxpp{
     
       
 
-    template <std::size_t i=0, class event_t = initializer_t_, class invocation_t  = initializer_t_>
+    template <std::size_t i=0, class event_t, class invocation_t  >
     bool handle_common_event(StateContext< state_t_> & context, const event_t & event ){
       if constexpr (is_common_event_handling<event_t, invocation_t>::value ){ 
 	std::get<i>(this->reducers_ )(context, event);
@@ -262,19 +261,17 @@ namespace fluxpp{
   };
 
   namespace detail{
-    template<class, class, class, UpdateType >
+    template<class, class, UpdateType >
     class ReducingStateSliceBuilder;
 
     template <
       class state_t_,
-      class initializer_t_,
       class... event_ts_,
       class ... invocation_ts_,
       class ... reducer_ts_,
       UpdateType update_type_>
     class ReducingStateSliceBuilder<
       state_t_ ,
-      initializer_t_,
       template_list<
 	template_list<event_ts_...>,
 	template_list<invocation_ts_...>,
@@ -282,12 +279,13 @@ namespace fluxpp{
 	>,
       update_type_>{
     private:
-      initializer_t_ initializer_;
+      state_t_ initial_value_;
       std::tuple<reducer_ts_...> reducers_;
     public:
-      ReducingStateSliceBuilder(initializer_t_ &&initializer, std::tuple<reducer_ts_...> && reducers ):
-	initializer_(std::move(initializer)),
+      ReducingStateSliceBuilder(state_t_&& initial_value, std::tuple<reducer_ts_...> && reducers ):initial_value_(std::move(initial_value)),
 	reducers_ (std::move(reducers)){};
+      
+
 
       template<class event_t,class reducer_t>
       auto with_event_reducer(reducer_t reducer ){
@@ -295,7 +293,6 @@ namespace fluxpp{
 	using namespace std;
 	using new_builder_t = ReducingStateSliceBuilder<
 	  state_t_,
-	  initializer_t_,
 	  template_list<
 	    template_list<event_ts_..., event_t>,
 	  template_list<invocation_ts_..., event_t>,
@@ -303,11 +300,10 @@ namespace fluxpp{
 	  >,
 	  update_type_>;
 	
-	return new_builder_t(
-			     move(this->initializer_),
+	return new_builder_t(std::move(this->initial_value_),
 			     tuple_cat(
-				       move(this->reducers_),
-				       std::make_tuple(move(reducer))) );
+				       std::move(this->reducers_),
+				       std::make_tuple(std::move(reducer))) );
       }
 
 
@@ -317,7 +313,6 @@ namespace fluxpp{
 	using namespace std;
 	using new_builder_t = ReducingStateSliceBuilder<
 	  state_t_,
-	  initializer_t_,
 	  template_list<
 	    template_list<event_ts_..., DataEvent<data_t>>,
 	    template_list<invocation_ts_..., data_t>,
@@ -325,8 +320,7 @@ namespace fluxpp{
 	  >,
 	  update_type_>;
 	
-	return new_builder_t(
-			     std::move(this->initializer_),
+	return new_builder_t(std::move(this->initial_value_),
 			     tuple_cat(
 				       std::move(this->reducers_),
 				       make_tuple(std::move(reducer))) );
@@ -339,7 +333,6 @@ namespace fluxpp{
 	using namespace std;
 	using new_builder_t = ReducingStateSliceBuilder<
 	  state_t_,
-	  initializer_t_,
 	  template_list<
 	    template_list<event_ts_..., SignalEvent>,
 	  template_list<invocation_ts_..., void>,
@@ -347,11 +340,10 @@ namespace fluxpp{
 	  >,
 	  update_type_>;
 	
-	return new_builder_t(
-			     move(this->initializer_),
+	return new_builder_t(std::move(this->initial_value_),
 			     tuple_cat(
-				       move(this->reducers_),
-				       make_tuple(move(reducer))) );
+				       std::move(this->reducers_),
+				       make_tuple(std::move(reducer))) );
       }
 
 
@@ -361,7 +353,6 @@ namespace fluxpp{
 	auto u_ptr= std::unique_ptr<
 	  ReducingStateSlice<
 	    state_t_,
-	    initializer_t_,
 	    template_list<
 	      template_list<event_ts_...>,
 	      template_list<invocation_ts_...>,
@@ -369,35 +360,33 @@ namespace fluxpp{
 	      > >
 	  >(new ReducingStateSlice<
 	    state_t_,
-	    initializer_t_,
 	    template_list<
 	      template_list<event_ts_...>,
 	      template_list<invocation_ts_...>,
 	      template_list<reducer_ts_...>
-	    > >(std::move(this->initializer_), std::move(this->reducers_)));
-	u_ptr-> initialize();
+	    > >(std::move(this->initial_value_), std::move(this->reducers_)));
 	return std::move(u_ptr);
       };
     };
   }
 
-  template<class initializer_t>
-  auto create_state_slice(initializer_t initializer){
-    using state_t = std::invoke_result_t<initializer_t>;
+  template<class state_t>
+  auto create_state_slice(state_t initial_value){
     static_assert(! std::is_void_v<state_t> );
     return detail::ReducingStateSliceBuilder<
       state_t,
-      initializer_t,
       template_list<
       template_list<>,
       template_list<>,
       template_list<>
 	>
-      , UpdateType::ChangingOnEvent>(std::move(initializer),std::tuple());
+      , UpdateType::ChangingOnEvent>(std::move(initial_value),std::tuple());
   }
 
 
 
+
+  
   class State{
   private:
     std::unordered_map<std::string,std::unique_ptr<StateSlice>> slices_;
@@ -431,14 +420,14 @@ namespace fluxpp{
       if (!this->slices_.insert({std::move(path), std::move(slice)}).second){
 	throw "Error problem accepting a new state slice";
       };
-      
     }
 
     
     
     StateSlice*  get_state_slice(const std::string & path) ;
-    
   };
+
+
   
   template<class state_t_>
   void StateContext<state_t_>::update_state(state_t_ new_state) {

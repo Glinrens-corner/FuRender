@@ -1,6 +1,9 @@
 #ifndef FLUXPP_ADDRESSOR_HPP
 #define FLUXPP_ADDRESSOR_HPP
+
 #include <string>
+
+#include "selector.hpp"
 
 namespace fluxpp{
   /** @brief Class to record state, accepted events and path of a state slice
@@ -12,14 +15,19 @@ namespace fluxpp{
     std::string path_;
     
   public:
-    Addressor(std::string path):path_(std::move( path_)){}
+    Addressor(std::string path):path_(std::move( path)){}
+
+
+
+    Selector<state_t_> create_selector() {
+      return {this->path_};
+    }
 
 
     
     const std::string& path()const{
       return this->path_;
-    };
-    
+    };    
   };
 
 
