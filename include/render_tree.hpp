@@ -17,10 +17,6 @@
 
 
 namespace fluxpp{
-  class BaseWidget;
-  template<WidgetType >
-  class DeferredWidget;
-  
 
 
   /** @brief struct that holds all information of a given widget instance 

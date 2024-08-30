@@ -14,7 +14,7 @@
 
 #include "value_holder.hpp"
 
-#include "render_tree_fwd.hpp"
+#include "render_tree.hpp"
 
 #include "state.hpp"
 

@@ -3,7 +3,7 @@
 #include <assert.h>
 
 #include "id_types.hpp"
-#include "render_tree_fwd.hpp"
+#include "render_tree.hpp"
 #include "widget.hpp"
 
 

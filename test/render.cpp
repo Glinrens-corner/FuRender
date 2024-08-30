@@ -4,7 +4,7 @@
 
 #include "basic.hpp"
 #include "context.hpp"
-#include "render_tree_fwd.hpp"
+#include "render_tree.hpp"
 #include "render_visitor.hpp"
 #include "state.hpp"
 #include "widget.hpp"
