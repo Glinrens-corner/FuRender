@@ -83,13 +83,13 @@ TEST_CASE("render in render ()", "[render,State,Widget,RenderVisitor]"){
   
   
   State state{};
-  RenderNode node{};
-  RenderTree tree(widget );
-  node.widget = widget;
-  RenderVisitor visitor(&state, &node, &tree) ;
+  RenderTree tree(widget, &state );
   CHECK(spy1==0);
   CHECK(spy2==100);
-  widget->accept(visitor);
+  tree.do_render();
   CHECK(spy1==1);
   CHECK(spy2==101);
+  SECTION("fluxpp tracks if "){
+
+  };
 }

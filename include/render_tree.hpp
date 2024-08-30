@@ -8,8 +8,11 @@
 #include <utility>
 #include <vector>
 #include <unordered_map>
+#include <deque>
+#include <set>
 
 #include "basic.hpp"
+#include "state.hpp"
 #include "value_holder.hpp"
 #include "id_types.hpp"
 #include "widget_fwd.hpp"
@@ -25,8 +28,9 @@ namespace fluxpp{
   struct RenderNode{
   public:
     std::shared_ptr<BaseWidget> widget;
-    //    std::vector<std::pair<widget_id_t, > >
-    //    subinstances{};  // mapping (widget of subinstance, occurrence of that widget) -> instance
+    widget_instance_id_t parent;
+    std::vector<widget_instance_id_t > 
+    subinstances{};  // mapping (widget of subinstance, occurrence of that widget) -> instance
     std::unique_ptr<ValueHolderBase> return_value{};
   };
 
@@ -48,19 +52,50 @@ namespace fluxpp{
   /** 
    *
    */
+  
+  /*
+   *
+   */
   class RenderTree{
+
+  private:
+    struct RenderQueueEntry{
+      widget_instance_id_t parent ;
+      widget_instance_id_t instance;
+      std::shared_ptr<BaseWidget> widget;
+    };
   private:
     widget_instance_id_t root_instance_;
     std::unordered_map<widget_instance_id_t, RenderNode> render_tree_;
     InstanceIdGenerator id_generator_{1};
-    //std::forward_list<> render_queue;
+    State* state_=nullptr;
+    std::deque<RenderQueueEntry> render_queue_{};
+    std::set<widget_instance_id_t> widget_instances_to_update_{};
+    std::vector<widget_instance_id_t> search_stack_{};
   public:
-    RenderTree(std::shared_ptr<DeferredWidget<WidgetType::Application>> root_widget);
-
+    RenderTree(std::shared_ptr<DeferredWidget<WidgetType::Application>> root_widget,
+	       State* state);
+    
     std::pair<widget_instance_id_t, RenderNode*> add_new_render_node(RenderNode&& );
     
+    void do_render();
 
-    void render_all();
+
+  public:
+    // widget_instance_id_t get_null_instance(){
+    //   return widget_null_instance;
+    // };
+
+
+    
+  private:
+    void do_render_internal();
+
+    void render_render_queue_entry(RenderQueueEntry&);
+
+    widget_instance_id_t get_next_widget_to_update()const;
+
+    void rerender_instance(widget_instance_id_t);
   };
   
 }

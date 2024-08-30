@@ -11,6 +11,7 @@ namespace fluxpp {
   using widget_id_t = uint64_t ;
   using widget_instance_id_t = uint64_t ;
 
+  constexpr widget_instance_id_t widget_null_instance = 0;
 }
 
 
