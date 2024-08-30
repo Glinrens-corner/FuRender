@@ -18,8 +18,10 @@ namespace fluxpp{
     Addressor(std::string path):path_(std::move( path)){}
 
 
-
-    Selector<state_t_> create_selector() {
+    /** @brief create a selector for the associated StateSlice
+     *
+     */
+    Selector<state_t_> create_selector()const {
       return {this->path_};
     }
 

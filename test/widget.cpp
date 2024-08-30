@@ -12,13 +12,14 @@
 TEST_CASE("create Widget", "[widget]"){
   using namespace fluxpp;
 
-  auto widget1 =
+  auto widget_impl =
     fluxpp::create_widget_with_selectors< WidgetType::Application >(Selector<int>("state/main_display"))
     .with_render_function([](Context<WidgetType::Application> &context, const int & ndisplay)->int{
-      std::cout << "hello World" << std::endl;
       return 1;})
     .make_shared();
 
-    std::shared_ptr<Widget<WidgetType::Application, int >> widget_ptr2 (widget1);
-    std::shared_ptr< DeferredWidget<WidgetType::Application>  > widget2 = widget1;
+  std::shared_ptr<Widget<WidgetType::Application, int >> widget =widget_impl;
+  std::shared_ptr< DeferredWidget<WidgetType::Application>  > deferred_widget = widget_impl;
+  std::shared_ptr<BaseWidget > base_widget = widget_impl;
+  
 }

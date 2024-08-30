@@ -9,6 +9,7 @@ namespace fluxpp {
   using command_instance_id = uint64_t ; 
 
   using widget_id_t = uint64_t ;
+  using widget_instance_id_t = uint64_t ;
 
 }
 

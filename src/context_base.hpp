@@ -4,9 +4,10 @@
 #include "basic.hpp"
 
 namespace fluxpp{
-  class RenderNode;
+  struct RenderNode;
   class RenderTree;
-
+  class State;
+  
   template <WidgetType >
   class Context;
 

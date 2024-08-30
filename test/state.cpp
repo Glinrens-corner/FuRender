@@ -18,7 +18,6 @@ TEST_CASE("test ReducingStateSlice", "[StateSlice]"){
     
     void operator()(fluxpp::StateContext<int>& context, const int &new_int){
       *outer_ = new_int;
-      std::cout << new_int<< std::endl;
     }
   
     NoCopyReducer( const NoCopyReducer& ) = delete;

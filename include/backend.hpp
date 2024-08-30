@@ -14,9 +14,13 @@ namespace fluxpp{
   public:
     command_type_id command_type;
     std::unique_ptr<ValueHolderBase> value_transferer;
+  public:
     Command(command_type_id command_type, std::unique_ptr<ValueHolderBase>  value_transferer):
       command_type(command_type),
       value_transferer(std::move(value_transferer)){}
+
+
+    
   };
 
   

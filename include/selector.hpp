@@ -4,7 +4,7 @@
 #include <type_traits>
 
 namespace fluxpp{
-  /** @brief Reference a state 
+  /** @brief Class that communicates the path and elementtype of a state_slice to a widget
    *
    *  @tparam selected_t_ type of the selected state, must be default constructible.
    */
@@ -15,10 +15,10 @@ namespace fluxpp{
   private:
     std::string path_ {};
   public:
-
-
     Selector(std::string path):path_(std::move(path)){}
 
+
+    
     /** @brief get the path to the state
      */
     const std::string & path() const{
