@@ -3,6 +3,7 @@
 
 #include <functional>
 #include <memory>
+#include <optional>
 #include <type_traits>
 #include <unordered_map>
 #include <utility>
@@ -80,12 +81,17 @@ namespace fluxpp{
     
     void do_render();
 
+    std::optional<RenderNode*> get_render_node_ptr(widget_id_t);
 
+    void set_render_node(widget_instance_id_t id, RenderNode&& new_node);
   public:
     // widget_instance_id_t get_null_instance(){
     //   return widget_null_instance;
     // };
 
+    widget_instance_id_t get_next_instance_id(){
+      return this->id_generator_.get_next_instance_id();
+    }
 
     
   private:

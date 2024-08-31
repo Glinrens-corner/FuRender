@@ -9,29 +9,27 @@
 #include "state.hpp"
 #include "widget.hpp"
 
-TEST_CASE("simple render ()", "[render,State,Widget,RenderVisitor]"){
+TEST_CASE("simple render ()", "[render][State][Widget][RenderTree]"){
   using namespace fluxpp;
-  int i = 0;
+  int spy = 0;
   
   auto widget = create_widget_with_selectors<fluxpp::WidgetType::Application>()
-    .with_render_function([&i ](Context<WidgetType::Application>&){
-      i=4;
+    .with_render_function([&spy ](Context<WidgetType::Application>&){
+      spy=4;
       return None::none;
     })
     .make_shared();
   State state{};
-  RenderNode node{};
-  node.widget = widget;
-  RenderVisitor visitor(&state, &node, nullptr) ;
-  CHECK(i==0);
-  widget->accept(visitor);
-  CHECK(i==4);
+  RenderTree tree(widget, &state);
+  CHECK(spy==0);
+  tree.do_render();
+  CHECK(spy==4);
 }
 
 
-TEST_CASE("simple render ( int )", "[render,State,Widget,RenderVisitor]"){
+TEST_CASE("simple render of a widget referencing state", "[render][State][Widget][RenderTree][StateSlice]"){
   using namespace fluxpp;
-  int i = 0;
+  int spy = 0;
   auto slice = create_state_slice<int>(4)
     .with_data_reducer<int>([](fluxpp::StateContext<int>& context, const int &new_int){
       context.update_state(new_int);
@@ -40,8 +38,8 @@ TEST_CASE("simple render ( int )", "[render,State,Widget,RenderVisitor]"){
   auto addressor = slice->create_addressor("here");
   
   auto widget = create_widget_with_selectors<fluxpp::WidgetType::Application>( addressor.create_selector())
-    .with_render_function([&i ](Context<WidgetType::Application>&, const int here_value){
-      i=here_value;
+    .with_render_function([&spy ](Context<WidgetType::Application>&, const int here_value){
+      spy=here_value;
       return None::none;
     })
     .make_shared();
@@ -49,12 +47,10 @@ TEST_CASE("simple render ( int )", "[render,State,Widget,RenderVisitor]"){
   
   State state{};
   state.set_state_slice(addressor,std::move(slice));
-  RenderNode node{};
-  node.widget = widget;
-  RenderVisitor visitor(&state, &node, nullptr) ;
-  CHECK(i==0);
-  widget->accept(visitor);
-  CHECK(i==4);
+  RenderTree tree(widget, &state);
+  CHECK(spy==0);
+  tree.do_render();
+  CHECK(spy==4);
 }
 
 
@@ -89,7 +85,12 @@ TEST_CASE("render in render ()", "[render,State,Widget,RenderVisitor]"){
   tree.do_render();
   CHECK(spy1==1);
   CHECK(spy2==101);
-  SECTION("fluxpp tracks if "){
+  SECTION("fluxpp tracks if a widget has to be updated"){
+    
+    tree.do_render();
+    CHECK(spy1==1);
+    CHECK(spy2==101);
 
+    
   };
 }

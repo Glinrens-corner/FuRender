@@ -1,4 +1,5 @@
 #include <memory>
+#include <optional>
 #include <tuple>
 #include <assert.h>
 #include <vector>
@@ -91,8 +92,9 @@ namespace fluxpp{
       assert(std::find(  it->second.subinstances.begin(),it->second.subinstances.end(),entry.instance) != it->second.subinstances.end() && "instance not subinstance of parent");
     }
 #endif //NDEBUG
-    RenderNode node{entry.widget, entry.parent, std::vector<widget_id_t>{}, std::unique_ptr<ValueHolderBase>{}};
-    RenderVisitor visitor( this->state_, &node, this);
+    widget_instance_id_t instance_id = 2;
+    widget_instance_id_t parent_id = widget_null_instance;
+    RenderVisitor visitor( this->state_,  instance_id ,entry.widget ,parent_id , this);
     entry.widget->accept(visitor);
   }
 
@@ -102,7 +104,7 @@ namespace fluxpp{
     auto it = this->render_tree_.find(instance_id );
     assert(it != this->render_tree_.end() && "instance to rerender not found");
     RenderNode& node = it->second;
-    RenderVisitor visitor(this->state_,&it->second, this);
+    RenderVisitor visitor(this->state_,instance_id, it->second.widget,it->second.parent, this);
     node.widget->accept(visitor);
   }
 
@@ -116,6 +118,25 @@ namespace fluxpp{
 
     return std::make_pair(id, &it->second );
   };
+
+
+
+  std::optional<RenderNode*> RenderTree::get_render_node_ptr(widget_id_t id){
+    auto it = this->render_tree_.find(id);
+    if (it != this->render_tree_.end()){
+      return &it->second;
+    }else{
+      return {};
+    }
+  }
+
+
+  
+  void RenderTree::set_render_node(widget_instance_id_t id, RenderNode &&new_node){
+    this->render_tree_[id] = std::move(new_node);
+  }
+  
+  
 }
 
 

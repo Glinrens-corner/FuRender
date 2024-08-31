@@ -14,15 +14,22 @@ namespace fluxpp{
   template<>
   class Context<WidgetType::Client>{
   private:
-    RenderNode* current_node_;
+    widget_instance_id_t current_instance_;    
+    RenderNode * current_node_;
     RenderTree* tree_;
     State * state_;
-    std::vector<std::pair<widget_id_t, uint16_t>> seen_widgets; // which widget has been seen how often.
+    std::vector<widget_instance_id_t> rendered_subinstances_{};
+    
   public:
-    Context(RenderNode* current_node, RenderTree* tree, State* state ):
+    Context(widget_instance_id_t current_instance, RenderNode* current_node, RenderTree* tree, State* state ):
+      current_instance_(current_instance),
       current_node_(current_node),
       tree_(tree),
-      state_(state){};
+      state_(state){
+      // shut up the unused var warning
+      (void) this->current_instance_;
+      (void) this->current_node_;
+    };
     
 
 
