@@ -93,7 +93,7 @@ namespace fluxpp {
     std::shared_ptr<BaseWidget> widget_;
     widget_instance_id_t parent_id_; 
     RenderTree* tree_;
-    std::optional<RenderNode> node_opt_{};
+    std::optional<WidgetInstanceData> node_opt_{};
   public:
     RenderVisitor(
 		  State* state,
@@ -116,7 +116,7 @@ namespace fluxpp {
     void render(widget_t& widget) {
       constexpr WidgetType widget_type_ = widget_t::get_widget_type();
       using return_t = typename widget_t::return_t;
-      RenderNode* node = this->get_node_ptr();
+      WidgetInstanceData* node = this->get_node_ptr();
       
       static_assert(!std::is_same_v<return_t, void>, "a widgets return type may not be void" );
       static_assert(std::is_default_constructible_v<return_t>, "a widgets return type must be default constructible");
@@ -157,7 +157,7 @@ namespace fluxpp {
     }
 
   private:
-    RenderNode* get_node_ptr();
+    WidgetInstanceData* get_node_ptr();
 
     void store_render_node();
   };

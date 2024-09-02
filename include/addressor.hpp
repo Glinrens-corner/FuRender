@@ -13,7 +13,6 @@ namespace fluxpp{
   class Addressor{
   private:
     std::string path_;
-    
   public:
     Addressor(std::string path):path_(std::move( path)){}
 
@@ -26,7 +25,7 @@ namespace fluxpp{
     }
 
 
-    
+
     const std::string& path()const{
       return this->path_;
     };    

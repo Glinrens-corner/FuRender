@@ -8,8 +8,8 @@ namespace fluxpp{
   template <>
   class Context<WidgetType::Visual2D>{
   public:
-    Context(RenderNode* , RenderTree* ){};
-    
+    Context(WidgetInstanceData* , RenderTree* ){};
+
   };
 
 }

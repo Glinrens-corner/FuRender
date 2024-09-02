@@ -15,14 +15,14 @@ namespace fluxpp{
   template <>
   class Context<WidgetType::Application>{
   private:
-    widget_instance_id_t current_instance_;    
-    RenderNode * current_node_;
+    widget_instance_id_t current_instance_;
+    WidgetInstanceData * current_node_;
     RenderTree* tree_;
     State * state_;
     std::vector<widget_instance_id_t> rendered_subinstances_{};
-    
+
   public:
-    Context(widget_instance_id_t current_instance, RenderNode* current_node, RenderTree* tree, State* state ):
+    Context(widget_instance_id_t current_instance, WidgetInstanceData* current_node, RenderTree* tree, State* state ):
       current_instance_(current_instance),
       current_node_(current_node),
       tree_(tree),
@@ -31,25 +31,25 @@ namespace fluxpp{
     };
 
 
-    
+
     void render(std::shared_ptr<DeferredWidget<WidgetType::Client> >)const;
 
-    
-    
+
+
     template<class return_t>
     return_t immediate_render(std::shared_ptr<Widget<WidgetType::Client,  return_t> > widget){
-      const RenderNode & child_node = render_i(std::move(widget));
+      const WidgetInstanceData & child_node = render_i(std::move(widget));
       const ValueHolder<return_t>* p =  dynamic_cast<const ValueHolder<return_t>*>(child_node.return_value.get());
       if(p){
 	return p->data;
       }
       return {};
     }
-    
+
 
 
   private:
-    const RenderNode& render_i(std::shared_ptr<DeferredWidget<WidgetType::Client> >);
+    const WidgetInstanceData& render_i(std::shared_ptr<DeferredWidget<WidgetType::Client> >);
   };
 }
 

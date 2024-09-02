@@ -19,7 +19,9 @@
 
 namespace fluxpp {
 
-
+  /** @brief virtual base class for Widgets
+   *
+   */
   class BaseWidget {
     private:
     widget_id_t widget_id_ ;
@@ -30,34 +32,50 @@ namespace fluxpp {
     virtual ~BaseWidget()=default;
 
     virtual std::optional<std::reference_wrapper<const std::string>> get_nth_selector_address(std::size_t i)=0;
-    
+
     widget_id_t get_widget_id(){
       return this->widget_id_;
     }
   };
-  
 
+
+
+  /** @brief virtual base class for Widgets that knows its WidgetType
+   *
+   */
   template <WidgetType widget_type_>
   class DeferredWidget:public BaseWidget{
   public:
     DeferredWidget(widget_id_t widget_id):BaseWidget(widget_id){};
   };
 
-    
+
+
+  /** @brief WidgetClass, that knows its Widgettype and the return type of the render function
+   *
+   */
   template <WidgetType widget_type_, class return_t_  >
   class Widget : public DeferredWidget<widget_type_>{
   public:
     Widget(widget_id_t widget_id):DeferredWidget<widget_type_>(widget_id){}
-    
-    
-   
+
+
+
   };
 
   template <WidgetType widget_type_, class render_fn_t_, class render_sig_t_>
   class WidgetImpl;
 
 
-  
+
+  /** @brief final Widget class adheres to a concept
+   *
+   * the final Widget class needs to override accept() such that is calls visitor.render(*this);
+   *  * also needs to override  get_nth_selector_address method as well as
+   *  * implement return_t as the return type of the render method
+   *  * implement args_tuple_t as a std::tuple<arg_ts...> of the Selector arguments
+   *  * implement return_t render(Context<widget_type>& , const arg_ts_&...)
+   */
   template <WidgetType widget_type_, class render_fn_t_, class return_t_, class ...arg_ts_>
   class WidgetImpl<widget_type_, render_fn_t_ , return_t_(Context<widget_type_>&, const arg_ts_ &...)> final:
     public Widget<widget_type_, return_t_>{
@@ -69,7 +87,7 @@ namespace fluxpp {
     std::tuple<Selector<arg_ts_>...> selectors_ ;
 
 
-    
+
   public:
     WidgetImpl(render_fn_t_ render_fn,std::tuple<Selector<arg_ts_>...> selectors, widget_id_t widget_id)
       :Widget<widget_type_, return_t_>(widget_id),
@@ -84,19 +102,19 @@ namespace fluxpp {
     }
 
 
-    
+
     void accept(RenderVisitor & visitor) final override{
       visitor.render(*this);
     }
 
 
-    
+
     std::optional<std::reference_wrapper<const std::string>> get_nth_selector_address(std::size_t i) final override{
       return get_nth_selector_address_i<0>( i);
     }
 
 
-    
+
     const std::tuple<Selector<arg_ts_>...> & selectors(){
       return this->selectors_;
     }
@@ -108,7 +126,7 @@ namespace fluxpp {
     }
 
 
-    
+
   private:
     template <std::size_t I>
     std::optional<std::reference_wrapper<const std::string>> get_nth_selector_address_i(std::size_t i){
@@ -124,7 +142,7 @@ namespace fluxpp {
     }
 
 
-    
+
   private:
     static_assert(std::is_same_v<
 		  std::invoke_result_t<render_fn_t_, Context<widget_type_>&, const arg_ts_ &...>
@@ -133,15 +151,15 @@ namespace fluxpp {
 
   namespace detail{
 
-    uint64_t create_widget_id();
-    
+    widget_id_t create_widget_id();
+
     template <WidgetType widget_type_, class render_fn_t_, class return_t_, class ... arg_ts_>
     class WidgetBuilderStage2{
     private:
       render_fn_t_ fn_;
       std::tuple<Selector<arg_ts_>...> selectors_;
     public:
-      
+
       WidgetBuilderStage2(render_fn_t_ fn, std::tuple<Selector<arg_ts_>...> selectors):
 	fn_(std::move(fn)),selectors_(std::move(selectors)){}
 
@@ -159,7 +177,7 @@ namespace fluxpp {
 	  >(std::move(this->fn_), std::move(this->selectors_), create_widget_id());
       }
     };
-    
+
     template <WidgetType widget_type_, class ... arg_ts_>
     class WidgetBuilderStage1{
     public:
@@ -183,19 +201,22 @@ namespace fluxpp {
 						      const arg_ts_& ...>::type;
 	return WidgetBuilderStage2< widget_type_, render_fn_t, return_t, arg_ts_... >(std::move(fn), std::move(this->selectors_));
       }
-      
-    };    
+
+    };
 
 
-    
-    
+
+
   }
 
+  /** @brief creates a WidgetBuilder that builds widget implementation.
+   *
+   */
   template <WidgetType widget_type_, class ... arg_ts_>
   detail::WidgetBuilderStage1<widget_type_, arg_ts_ ...> create_widget_with_selectors(Selector<arg_ts_>... selectors){
     return detail::WidgetBuilderStage1<widget_type_, arg_ts_...>(std::move(selectors)...);
   }
-  
+
 }
 
 #endif // FLUXPP_WIDGET_HPP

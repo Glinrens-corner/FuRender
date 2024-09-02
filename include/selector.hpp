@@ -1,12 +1,13 @@
 #ifndef FLUXPP_SELECTOR_HPP
 #define FLUXPP_SELECTOR_HPP
+
 #include <string>
 #include <type_traits>
 
 namespace fluxpp{
-  /** @brief Class that communicates the path and elementtype of a state_slice to a widget
+  /** @brief Class that communicates the path and elementtype of a StateSlice to a widget
    *
-   *  @tparam selected_t_ type of the selected state, must be default constructible.
+   *  @tparam selected_t_ type of the value of the  selected state, must be default constructible.
    */
   template<class selected_t_ >
   class Selector{
@@ -15,10 +16,14 @@ namespace fluxpp{
   private:
     std::string path_ {};
   public:
+    /** @brief constructor of the Selector
+     *
+     * @param path string that describes the path to the StateSlice
+     */
     Selector(std::string path):path_(std::move(path)){}
 
 
-    
+
     /** @brief get the path to the state
      */
     const std::string & path() const{

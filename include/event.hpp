@@ -1,9 +1,10 @@
 #ifndef FLUXPP_EVENT_HPP
 #define FLUXPP_EVENT_HPP
 
+#include <memory>
+
 #include "basic.hpp"
 
-#include <memory>
 
 namespace fluxpp{
 
@@ -11,6 +12,7 @@ namespace fluxpp{
    *
    */
   class BaseEvent{
+    // some virtual function so BaseEvent is polymorphic.
     virtual void get_type(){};
   };
 
@@ -38,7 +40,6 @@ namespace fluxpp{
   class SignalEvent :
     public BaseEvent{
     
-    
   };
 
 
@@ -49,8 +50,6 @@ namespace fluxpp{
   public:
     BaseEvent * event;
     std::string path;
-  public:
-    
   };
   
 }

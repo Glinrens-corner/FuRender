@@ -11,22 +11,17 @@
 
 
 namespace fluxpp{
-  widget_instance_id_t InstanceIdGenerator::get_next_instance_id(){
-    widget_instance_id_t ret = this->current_instance_id;
-    this->current_instance_id += 1;
-    return ret;
-  }
 
 
-  
-  
+
+
   RenderTree::RenderTree(
 			 std::shared_ptr<DeferredWidget<WidgetType::Application> > root_widget,
 			 State* state):state_(state){
     this->root_instance_ = widget_null_instance;
 
     //
-    
+
     this->render_queue_.emplace_back(RenderQueueEntry{
 	widget_null_instance,
 	this->id_generator_.get_next_instance_id(),
@@ -34,15 +29,14 @@ namespace fluxpp{
   }
 
 
-  
+
   widget_instance_id_t RenderTree::get_next_widget_to_update() const{
-    using iterator_t = typename decltype(this->widget_instances_to_update_)::iterator;
-    iterator_t instance_to_update_it = this->widget_instances_to_update_.begin();
+    auto instance_to_update_it = this->widget_instances_to_update_.begin();
     {
 	widget_instance_id_t parent = this->render_tree_.find(*instance_to_update_it)->second.parent;
 	while(  parent != widget_null_instance ){
 	  widget_instance_id_t current = parent;
-	  auto update_it = this->widget_instances_to_update_.find(current ); 
+	  auto update_it = this->widget_instances_to_update_.find(current );
 	  if ( update_it != this->widget_instances_to_update_.end()){
 	    instance_to_update_it = update_it;
 	  }
@@ -53,7 +47,7 @@ namespace fluxpp{
   }
 
 
-  
+
   void RenderTree::do_render(){
     // only in the first render
     while( !this->render_queue_.empty()  ){
@@ -67,10 +61,10 @@ namespace fluxpp{
 	// error: no tree, but instances in the tree to update???
 	break;
       }
-      
+
       widget_instance_id_t next_to_update =  this->get_next_widget_to_update();
       this->rerender_instance(next_to_update);
-      
+
       while( !this->render_queue_.empty() ){
 	RenderQueueEntry& entry = this->render_queue_.back();
 	this->render_render_queue_entry(entry);
@@ -80,7 +74,7 @@ namespace fluxpp{
   }
 
 
-  
+
   void RenderTree::render_render_queue_entry(RenderQueueEntry &entry){
 
 #ifndef NDEBUG
@@ -104,19 +98,19 @@ namespace fluxpp{
 
 
   void RenderTree::rerender_instance(widget_instance_id_t instance_id){
-    std::cout << "rerender_instance instance:"<< instance_id << std::endl; 
+    std::cout << "rerender_instance instance:"<< instance_id.value() << std::endl;
     auto it = this->render_tree_.find(instance_id );
     assert(it != this->render_tree_.end() && "instance to rerender not found");
-    RenderNode& node = it->second;
+    WidgetInstanceData& node = it->second;
     RenderVisitor visitor(this->state_,instance_id, it->second.widget,it->second.parent, this);
     node.widget->accept(visitor);
   }
 
-  
-  
-  std::pair<widget_instance_id_t,RenderNode*> RenderTree::add_new_render_node(RenderNode &&node){
+
+
+  std::pair<widget_instance_id_t,WidgetInstanceData*> RenderTree::add_new_render_node(WidgetInstanceData &&node){
     const widget_instance_id_t id =this->id_generator_.get_next_instance_id();
-    
+
     auto [it, ok ] =  this->render_tree_.insert({id, std::move(node)});
     assert(ok);
 
@@ -125,7 +119,7 @@ namespace fluxpp{
 
 
 
-  std::optional<RenderNode*> RenderTree::get_render_node_ptr(widget_id_t id){
+  std::optional<WidgetInstanceData*> RenderTree::get_render_node_ptr(widget_instance_id_t id){
     auto it = this->render_tree_.find(id);
     if (it != this->render_tree_.end()){
       return &it->second;
@@ -135,14 +129,12 @@ namespace fluxpp{
   }
 
 
-  
-  void RenderTree::set_render_node(widget_instance_id_t id, RenderNode &&new_node){
+
+  void RenderTree::set_render_node(widget_instance_id_t id, WidgetInstanceData &&new_node){
     this->render_tree_[id] = std::move(new_node);
   }
 
 
 
-  
+
 }
-
-

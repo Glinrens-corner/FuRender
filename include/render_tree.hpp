@@ -10,7 +10,7 @@
 #include <vector>
 #include <unordered_map>
 #include <deque>
-#include <set>
+#include <unordered_set>
 
 #include "basic.hpp"
 #include "state.hpp"
@@ -23,37 +23,39 @@
 namespace fluxpp{
 
 
-  /** @brief struct that holds all information of a given widget instance 
+  /** @brief struct that holds all information of a given widget instance
    *
    */
-  struct RenderNode{
+  struct WidgetInstanceData{
   public:
     std::shared_ptr<BaseWidget> widget;
     widget_instance_id_t parent;
-    std::vector<widget_instance_id_t > 
+    std::vector<widget_instance_id_t >
     subinstances{};  // mapping (widget of subinstance, occurrence of that widget) -> instance
     std::unique_ptr<ValueHolderBase> return_value{};
   };
 
 
-  
+
   class InstanceIdGenerator{
   private:
-    widget_instance_id_t current_instance_id;
+    widget_instance_id_t::value_t current_instance_value_;
   public:
-    InstanceIdGenerator(widget_instance_id_t id):current_instance_id(id){};
+    InstanceIdGenerator(widget_instance_id_t::value_t id):current_instance_value_(id){};
 
-    widget_instance_id_t get_next_instance_id();
+    widget_instance_id_t get_next_instance_id(){
+      return widget_instance_id_t( this->current_instance_value_++);
+    };
   };
 
 
 
 
-  
-  /** 
+
+  /**
    *
    */
-  
+
   /*
    *
    */
@@ -75,24 +77,24 @@ namespace fluxpp{
   public:
 #endif
     widget_instance_id_t root_instance_;
-    std::unordered_map<widget_instance_id_t, RenderNode> render_tree_;
+    std::unordered_map<widget_instance_id_t, WidgetInstanceData> render_tree_;
     InstanceIdGenerator id_generator_{1};
     State* state_=nullptr;
     std::deque<RenderQueueEntry> render_queue_{};
-    std::set<widget_instance_id_t> widget_instances_to_update_{};
+    std::unordered_set<widget_instance_id_t> widget_instances_to_update_{};
     std::vector<widget_instance_id_t> search_stack_{};
 
   public:
     RenderTree(std::shared_ptr<DeferredWidget<WidgetType::Application>> root_widget,
 	       State* state);
-    
-    std::pair<widget_instance_id_t, RenderNode*> add_new_render_node(RenderNode&& );
-    
+
+    std::pair<widget_instance_id_t, WidgetInstanceData*> add_new_render_node(WidgetInstanceData&& );
+
     void do_render();
 
-    std::optional<RenderNode*> get_render_node_ptr(widget_id_t);
+    std::optional<WidgetInstanceData*> get_render_node_ptr(widget_instance_id_t);
 
-    void set_render_node(widget_instance_id_t id, RenderNode&& new_node);
+    void set_render_node(widget_instance_id_t id, WidgetInstanceData&& new_node);
 
   public:
     widget_instance_id_t get_next_instance_id(){
@@ -100,7 +102,7 @@ namespace fluxpp{
     }
 
 
-    
+
     void announce_change(widget_instance_id_t instance_id){
       this->widget_instances_to_update_.insert(instance_id);
     }
@@ -125,7 +127,7 @@ namespace fluxpp{
 
     void rerender_instance(widget_instance_id_t);
   };
-  
+
 }
 
 #endif //FLUXPP_RENDER_TREE_HPP
