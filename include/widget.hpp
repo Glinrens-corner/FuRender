@@ -26,9 +26,11 @@ namespace fluxpp {
   public:
     BaseWidget(widget_id_t widget_id):widget_id_(widget_id){}
     virtual  void accept(RenderVisitor &  visitor)=0;
+
     virtual ~BaseWidget()=default;
 
-
+    virtual std::optional<std::reference_wrapper<const std::string>> get_nth_selector_address(std::size_t i)=0;
+    
     widget_id_t get_widget_id(){
       return this->widget_id_;
     }
@@ -89,8 +91,8 @@ namespace fluxpp {
 
 
     
-    std::optional<std::string_view> get_nth_selector_address(std::size_t i){
-      return get_nth_selector_address_i( i);
+    std::optional<std::reference_wrapper<const std::string>> get_nth_selector_address(std::size_t i) final override{
+      return get_nth_selector_address_i<0>( i);
     }
 
 
@@ -109,10 +111,10 @@ namespace fluxpp {
     
   private:
     template <std::size_t I>
-    std::optional<std::string_view>    get_nth_selector_address_i(std::size_t i){
+    std::optional<std::reference_wrapper<const std::string>> get_nth_selector_address_i(std::size_t i){
       if constexpr( I < std::tuple_size_v<std::tuple<Selector<arg_ts_>...>>){
 	if(I==i){
-	  return std::string_view(std::get<I>(this->selectors_).path());
+	  return std::get<I>(this->selectors_).path();
 	} else {
 	  return get_nth_selector_address_i<I+1>(i);
 	}

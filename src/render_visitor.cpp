@@ -1,6 +1,6 @@
 #include "render_visitor.hpp"
 #include "render_tree.hpp"
-
+#include "widget.hpp"
 
 namespace fluxpp{
   RenderNode* RenderVisitor::get_node_ptr(){
@@ -20,6 +20,12 @@ namespace fluxpp{
   void RenderVisitor::store_render_node(){
     if(this->node_opt_.has_value()){
       this->tree_->set_render_node(this->instance_id_, std::move(this->node_opt_.value()));
+      for ( int iselector = 0; this->widget_->get_nth_selector_address( iselector).has_value(); iselector++ ){
+	
+	this->tree_->get_state().accept_subscription(this->widget_->get_nth_selector_address( iselector).value().get(), this->instance_id_);
+      }
+    } else {
+      
     }
     
   }

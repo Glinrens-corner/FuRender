@@ -59,13 +59,21 @@ namespace fluxpp{
    */
   class RenderTree{
 
+#ifdef NDEBUG
   private:
+#else
+  public:
+#endif
     struct RenderQueueEntry{
       widget_instance_id_t parent ;
       widget_instance_id_t instance;
       std::shared_ptr<BaseWidget> widget;
     };
+#ifdef NDEBUG
   private:
+#else
+  public:
+#endif
     widget_instance_id_t root_instance_;
     std::unordered_map<widget_instance_id_t, RenderNode> render_tree_;
     InstanceIdGenerator id_generator_{1};
@@ -73,6 +81,7 @@ namespace fluxpp{
     std::deque<RenderQueueEntry> render_queue_{};
     std::set<widget_instance_id_t> widget_instances_to_update_{};
     std::vector<widget_instance_id_t> search_stack_{};
+
   public:
     RenderTree(std::shared_ptr<DeferredWidget<WidgetType::Application>> root_widget,
 	       State* state);
@@ -84,16 +93,29 @@ namespace fluxpp{
     std::optional<RenderNode*> get_render_node_ptr(widget_id_t);
 
     void set_render_node(widget_instance_id_t id, RenderNode&& new_node);
-  public:
-    // widget_instance_id_t get_null_instance(){
-    //   return widget_null_instance;
-    // };
 
+  public:
     widget_instance_id_t get_next_instance_id(){
       return this->id_generator_.get_next_instance_id();
     }
 
+
     
+    void announce_change(widget_instance_id_t instance_id){
+      this->widget_instances_to_update_.insert(instance_id);
+    }
+
+
+
+    State& get_state(){
+      return *this->state_;
+    }
+
+
+
+    void rendered_instance(widget_instance_id_t instance){
+      this->widget_instances_to_update_.erase(instance);
+    }
   private:
     void do_render_internal();
 

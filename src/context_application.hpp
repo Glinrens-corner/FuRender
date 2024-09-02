@@ -51,8 +51,9 @@ namespace fluxpp{
   private:
     const RenderNode& render_i(std::shared_ptr<DeferredWidget<WidgetType::Client> >);
   };
-
 }
+
+
 
 
 #endif //FLUXPP_CONTEXT_APPLICATION_HPP

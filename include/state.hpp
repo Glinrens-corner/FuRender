@@ -1,18 +1,23 @@
 #ifndef FLUXPP_STATE_HPP
 #define FLUXPP_STATE_HPP
 
+#include <cassert>
 #include <tuple>
 #include <type_traits>
 //#include <typeinfo>
 #include <memory>
 #include <functional>
 #include <unordered_map>
+#include <vector>
 
 #include "basic.hpp"
 #include "event.hpp"
 #include "addressor.hpp"
+#include "id_types.hpp"
 
 namespace fluxpp{
+  class RenderTree;
+
   enum class UpdateType{
     ChangingOnEvent,
     //    MemComparable,
@@ -58,15 +63,29 @@ namespace fluxpp{
   template< class state_t_ >
   class StateContext{
   private:
-    UpdateType update_type_ = UpdateType::ChangingOnEvent;
     TypedStateSlice<state_t_>* slice_;;
-
+    bool is_updated_;
 
   public:
-    StateContext(TypedStateSlice<state_t_>* slice, UpdateType update_type):update_type_(update_type), slice_(slice){};
+    StateContext(TypedStateSlice<state_t_>* slice):
+      slice_(slice){
+      this->is_updated_ = this->get_initial_is_updated_value();
+    };
 
+
+
+    bool is_updated(){
+      return this->is_updated_;
+    }
+  public:
     void update_state(state_t_ new_state);
+
+  private:
+    bool get_initial_is_updated_value()const;
   };
+
+
+
 
   
   class StateDispatchVisitor{
@@ -76,13 +95,9 @@ namespace fluxpp{
     StateDispatchVisitor(EventEnvelope event_envelope):event_envelope_(std::move(event_envelope)){};
     
     template <class state_slice_impl_t>
-    void visit(state_slice_impl_t* state_slice_impl){
-      using state_t = typename state_slice_impl_t::state_t;
-      UpdateType update_type = state_slice_impl->update_type();
-      StateContext<state_t> context(state_slice_impl,  update_type);
-      
-      const EventEnvelope & const_event_envelope = this->event_envelope_;
-      state_slice_impl->handle_event(context, const_event_envelope);
+    bool visit(state_slice_impl_t* state_slice_impl){
+      const BaseEvent&  event= *this->event_envelope_.event;
+      return state_slice_impl->handle_event(event);
     } 
   };
   
@@ -90,8 +105,9 @@ namespace fluxpp{
   
   class StateSlice{
   public:
-    virtual void accept_dispatch_visitor(StateDispatchVisitor& ) = 0;
+    virtual bool accept_dispatch_visitor(StateDispatchVisitor& ) = 0;
     virtual ~StateSlice(){};
+    virtual UpdateType update_type()=0;
   };
 
 
@@ -121,13 +137,16 @@ namespace fluxpp{
 
 
     
-    virtual void set_state(state_t_ state){
+    virtual bool set_state(state_t_ state){
       this->state_ = state;
+      return false;
     }
 
 
     
-
+    const state_t_ & state()const{
+      return this->state_;
+    }
   private:
     static_assert(std::is_default_constructible_v<state_t_>,"state must be default constructible" );
     
@@ -161,19 +180,21 @@ namespace fluxpp{
       TypedStateSlice<state_t_>(std::move(initial_value)),
       reducers_(std::move(reducers)){};
     
-    void accept_dispatch_visitor(StateDispatchVisitor& visitor) override final{
-      visitor.visit(this);
+    bool accept_dispatch_visitor(StateDispatchVisitor& visitor) override final{
+      return visitor.visit(this);
     }
 
 
     
-    void handle_event(StateContext< state_t_ > & context, const EventEnvelope& envelope ){
-      try_next_handler<0>(context, envelope);
+    bool handle_event(const BaseEvent& event ){
+      StateContext<state_t_>context{this};
+      try_next_handler<0>(context, event);
+      return context.is_updated();
     }
 
 
     
-    static constexpr UpdateType update_type(){
+    UpdateType update_type()override final{
       return update_type_;
     }
 
@@ -182,35 +203,48 @@ namespace fluxpp{
     static addressor_t create_addressor(std::string path){
       return {std::move(path)};
     }
+
+
+
+    bool set_state(state_t_ state)override final{
+      bool updated = false;
+      if constexpr(update_type_==UpdateType::ChangingOnEvent){
+	updated = true;
+      }else if constexpr(update_type_== UpdateType::EqualityComparable){
+	updated = this->state()==state;
+      };
+      TypedStateSlice<state_t_>::set_state(state);
+      return updated;
+    }
   private:
     template <std::size_t i>
     typename std::enable_if<i < sizeof...(callable_ts_), void>::type
-    try_next_handler(StateContext<state_t_> & context, const EventEnvelope& envelope){
-      if (try_nth_handler<i>(context,envelope)){
+    try_next_handler( StateContext< state_t_>& context, const BaseEvent& event){
+
+      if (try_nth_handler<i>(context, event)){
 	return ;
       } else {
-	try_next_handler<i+1>( context, envelope);
+	try_next_handler<i+1>(context, event);
       };
     };
 
 
     
     template <std::size_t i>
-    typename std::enable_if<i == sizeof...(callable_ts_), void>::type try_next_handler(StateContext<state_t_> & , const EventEnvelope& ){
+    typename std::enable_if<i == sizeof...(callable_ts_), void>::type try_next_handler(StateContext< state_t_>& , const BaseEvent& ){
     };
     
 
     
     template<std::size_t i>
-    bool try_nth_handler(StateContext< state_t_> & context, const EventEnvelope & envelope ){
+    bool try_nth_handler(StateContext< state_t_>&, const BaseEvent & event ){
       using event_t = typename template_list_element< i, template_list<event_ts_...> >::type;
       using invocation_t = typename template_list_element< i, template_list<invocation_ts_...> >::type;
-      event_t* event_ptr = dynamic_cast<event_t*>(envelope.event );
-      //      error<invocation_t>::value;
+      const event_t* event_ptr = dynamic_cast<const event_t*>(&event );
       if (event_ptr != nullptr){
-	if(this->handle_data_event<i, event_t, invocation_t>(context, *event_ptr))return true;
-	if(handle_signal_event<i, event_t, invocation_t>(context, *event_ptr))return true;
-	if(handle_common_event<i, event_t, invocation_t>(context, *event_ptr))return true;
+	if(this->handle_data_event<i, event_t, invocation_t>(*event_ptr))return true;
+	if(handle_signal_event<i, event_t, invocation_t>(*event_ptr))return true;
+	if(handle_common_event<i, event_t, invocation_t>( *event_ptr))return true;
       }
       return false;
     };
@@ -218,8 +252,10 @@ namespace fluxpp{
 
     
     template <std::size_t i, class event_t, class invocation_t >
-     bool handle_data_event(StateContext< state_t_> & context, const event_t & event ){
+     bool handle_data_event( const event_t & event ){
       if constexpr (is_data_event_handling<event_t, invocation_t>::value){
+	StateContext<state_t_>context{this};
+
 	std::get<i>(this->reducers_ )(context, event.data);
 	return true;
       } else {
@@ -233,8 +269,9 @@ namespace fluxpp{
 	      class event_t,
 	      class invocation_t
 	      >
-    bool handle_signal_event(StateContext< state_t_> & context, const event_t & event ){
+    bool handle_signal_event(const event_t & event ){
       if constexpr (is_signal_event_handling<event_t, invocation_t>::value ){
+      StateContext<state_t_>context{this};
       std::get<i>(this->reducers_ )(context);
       return true;
       } else {
@@ -243,13 +280,11 @@ namespace fluxpp{
     }
 
 
-      
-    
-      
 
-    template <std::size_t i=0, class event_t, class invocation_t  >
-    bool handle_common_event(StateContext< state_t_> & context, const event_t & event ){
+    template <std::size_t i, class event_t, class invocation_t  >
+    bool handle_common_event( const event_t & event ){
       if constexpr (is_common_event_handling<event_t, invocation_t>::value ){ 
+	StateContext<state_t_>context{this};
 	std::get<i>(this->reducers_ )(context, event);
 	return true;
       } else {
@@ -349,7 +384,6 @@ namespace fluxpp{
 
 
       auto make_unique_ptr(){
-	
 	auto u_ptr= std::unique_ptr<
 	  ReducingStateSlice<
 	    state_t_,
@@ -370,6 +404,8 @@ namespace fluxpp{
     };
   }
 
+
+
   template<class state_t>
   auto create_state_slice(state_t initial_value){
     static_assert(! std::is_void_v<state_t> );
@@ -380,7 +416,7 @@ namespace fluxpp{
       template_list<>,
       template_list<>
 	>
-      , UpdateType::ChangingOnEvent>(std::move(initial_value),std::tuple());
+      , UpdateType::ChangingOnEvent>(std::move(initial_value),std::tuple<>());
   }
 
 
@@ -388,8 +424,23 @@ namespace fluxpp{
 
   
   class State{
+  
+#ifdef NDEBUG
   private:
-    std::unordered_map<std::string,std::unique_ptr<StateSlice>> slices_;
+#else
+  public:
+#endif //NDEBUG
+    struct SliceData{
+      std::unique_ptr<StateSlice> slice;
+      std::vector<widget_instance_id_t> subscriptions;
+    };
+#ifdef NDEBUG
+  private:
+#else
+  public:
+#endif //NDEBUG
+    std::unordered_map<std::string,SliceData> slices_;
+    RenderTree * render_tree_=nullptr;
   public:
     template<class selector_t>
     const typename selector_t::selected_t* get_state_ptr(const selector_t & selector){
@@ -409,7 +460,7 @@ namespace fluxpp{
     template<class state_t, class ... event_ts>
     void set_state_slice(Addressor<state_t, event_ts...>& addressor,
 			 std::unique_ptr<StateSlice> slice ){
-      if (!this->slices_.insert({addressor.path(), std::move(slice)}).second){
+      if (!this->slices_.insert({addressor.path(), SliceData{std::move(slice),{}}}).second){
 	throw "Error problem accepting a new state slice";
       };
     }
@@ -417,21 +468,67 @@ namespace fluxpp{
 
     
     void set_state_slice(std::string path, std::unique_ptr<StateSlice> slice){
-      if (!this->slices_.insert({std::move(path), std::move(slice)}).second){
+      if (!this->slices_.insert({std::move(path), SliceData{std::move(slice)}}).second){
 	throw "Error problem accepting a new state slice";
       };
     }
 
+
+
+    void accept_subscription(const std::string& path, widget_instance_id_t instance_id){
+      auto it = this->slices_.find(path);
+      if(it != this->slices_.end()){
+	it->second.subscriptions.push_back(instance_id);
+      }
+    }
+
+
     
+    void remove_subscription(const std::string& path, widget_instance_id_t instance_id){
+      auto it = this->slices_.find(path);
+      if(it != this->slices_.end()){
+	std::vector<widget_instance_id_t>& subscriptions = it->second.subscriptions;
+	//auto start_it = subscriptions.begin();
+        auto current_it  =  std::find(subscriptions.begin(), subscriptions.end(), instance_id);
+	if(current_it!= subscriptions.end()){
+	  *current_it= subscriptions.back();
+	  subscriptions.pop_back();
+	}
+      }
+    }
+
+
     
+    void set_render_tree(RenderTree* render_tree){
+      this->render_tree_=render_tree;
+    }
+  public:
     StateSlice*  get_state_slice(const std::string & path) ;
+    
+    void dispatch_event(EventEnvelope& );
+    
   };
 
 
   
   template<class state_t_>
   void StateContext<state_t_>::update_state(state_t_ new_state) {
-    this->slice_->set_state(new_state);
+    this->is_updated_ = this->slice_->set_state(new_state);
+  }
+
+
+  
+  template<class state_t_>
+  bool StateContext<state_t_>::get_initial_is_updated_value()const{
+    switch(this->slice_->update_type()  ){
+    case UpdateType::ChangingOnEvent:
+      return true;
+      break;;
+    case UpdateType::EqualityComparable:
+      return false;
+      break;;
+    }
+    assert(false);
   }
 }
 

@@ -48,7 +48,7 @@ namespace fluxpp{
   class EventEnvelope{
   public:
     BaseEvent * event;
-
+    std::string path;
   public:
     
   };

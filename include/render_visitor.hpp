@@ -139,9 +139,11 @@ namespace fluxpp {
 	  // ERROR return type isn't identical to the previous one.
           node->return_value = std::unique_ptr<ValueHolderBase>(
 								new ValueHolder<return_t>(
-											  detail::apply_tuple<return_t>(widget , context, args_tuple,  sequence_t() )              )
+											       detail::apply_tuple<return_t>(widget , context, args_tuple,  sequence_t() )         )
 								);
-	    }
+	}else {
+	  p->data = detail::apply_tuple<return_t>(widget , context, args_tuple,  sequence_t() );
+	}
       } else {
             node->return_value = std::unique_ptr<ValueHolderBase>(
 								  new ValueHolder<return_t>(
@@ -150,6 +152,7 @@ namespace fluxpp {
                 );
       }
       this->store_render_node();
+      this->tree_->rendered_instance(this->instance_id_);
       return;
     }
 
