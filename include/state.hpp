@@ -25,32 +25,32 @@ namespace fluxpp{
   };
 
 
-  
+
   template<class event_t_, class invocation_t_>
   struct is_data_event_handling: std::false_type{
   };
-  
+
   template<class data_t_>
   struct is_data_event_handling<DataEvent<data_t_>, data_t_>
     :std::true_type{
   };
-  
+
   template<class event_t_, class invocation_t_>
   struct is_signal_event_handling: std::false_type{
   };
-  
+
   template<>
   struct is_signal_event_handling<SignalEvent, void>{
     static constexpr  bool value() {return true;}
   };
-  
+
   template <bool , bool >
   struct and_type : std::false_type{};
 
   template < >
   struct and_type<true,true> : std::true_type{};
 
-    
+
   template<class event_t_, class invocation_t_>
   struct is_common_event_handling:
     and_type <!is_data_event_handling< event_t_,  invocation_t_>::value,
@@ -59,7 +59,7 @@ namespace fluxpp{
 
   template <class state_t>
   class TypedStateSlice;
-    
+
   template< class state_t_ >
   class StateContext{
   private:
@@ -87,22 +87,22 @@ namespace fluxpp{
 
 
 
-  
+
   class StateDispatchVisitor{
   private:
     EventEnvelope event_envelope_;
   public:
     StateDispatchVisitor(EventEnvelope event_envelope):event_envelope_(std::move(event_envelope)){};
-    
+
     template <class state_slice_impl_t>
     bool visit(state_slice_impl_t* state_slice_impl){
       const BaseEvent&  event= *this->event_envelope_.event;
       return state_slice_impl->handle_event(event);
-    } 
+    }
   };
-  
 
-  
+
+
   class StateSlice{
   public:
     virtual bool accept_dispatch_visitor(StateDispatchVisitor& ) = 0;
@@ -113,7 +113,7 @@ namespace fluxpp{
 
 
 
-  
+
   template< class state_t_>
   class TypedStateSlice: public StateSlice{
   public:
@@ -121,12 +121,12 @@ namespace fluxpp{
   protected:
     state_t state_{};
   public:
-    explicit TypedStateSlice(state_t state):StateSlice(),state_(std::move(state)){  
+    explicit TypedStateSlice(state_t state):StateSlice(),state_(std::move(state)){
     }
 
 
 
-    TypedStateSlice(){  
+    TypedStateSlice(){
     }
 
 
@@ -136,26 +136,26 @@ namespace fluxpp{
     }
 
 
-    
+
     virtual bool set_state(state_t_ state){
       this->state_ = state;
       return false;
     }
 
 
-    
+
     const state_t_ & state()const{
       return this->state_;
     }
   private:
     static_assert(std::is_default_constructible_v<state_t_>,"state must be default constructible" );
-    
+
   };
 
 
-  
 
-  
+
+
   template<class, class,  UpdateType=UpdateType::ChangingOnEvent>
   class ReducingStateSlice;
 
@@ -170,22 +170,22 @@ namespace fluxpp{
       template_list<callable_ts_...>> ,
       update_type_>:  public TypedStateSlice<state_t_>{
   public:
-      using addressor_t = Addressor<state_t_, event_ts_...>; 
+      using addressor_t = Addressor<state_t_, event_ts_...>;
   private:
     std::tuple<callable_ts_...> reducers_;
-    
+
   public:
     ReducingStateSlice(state_t_ initial_value,
 		       std::tuple<callable_ts_...> reducers):
       TypedStateSlice<state_t_>(std::move(initial_value)),
       reducers_(std::move(reducers)){};
-    
+
     bool accept_dispatch_visitor(StateDispatchVisitor& visitor) override final{
       return visitor.visit(this);
     }
 
 
-    
+
     bool handle_event(const BaseEvent& event ){
       StateContext<state_t_>context{this};
       try_next_handler<0>(context, event);
@@ -193,7 +193,7 @@ namespace fluxpp{
     }
 
 
-    
+
     UpdateType update_type()override final{
       return update_type_;
     }
@@ -229,13 +229,13 @@ namespace fluxpp{
     };
 
 
-    
+
     template <std::size_t i>
     typename std::enable_if<i == sizeof...(callable_ts_), void>::type try_next_handler(StateContext< state_t_>& , const BaseEvent& ){
     };
-    
 
-    
+
+
     template<std::size_t i>
     bool try_nth_handler(StateContext< state_t_>&, const BaseEvent & event ){
       using event_t = typename template_list_element< i, template_list<event_ts_...> >::type;
@@ -250,7 +250,7 @@ namespace fluxpp{
     };
 
 
-    
+
     template <std::size_t i, class event_t, class invocation_t >
      bool handle_data_event( const event_t & event ){
       if constexpr (is_data_event_handling<event_t, invocation_t>::value){
@@ -283,7 +283,7 @@ namespace fluxpp{
 
     template <std::size_t i, class event_t, class invocation_t  >
     bool handle_common_event( const event_t & event ){
-      if constexpr (is_common_event_handling<event_t, invocation_t>::value ){ 
+      if constexpr (is_common_event_handling<event_t, invocation_t>::value ){
 	StateContext<state_t_>context{this};
 	std::get<i>(this->reducers_ )(context, event);
 	return true;
@@ -292,7 +292,7 @@ namespace fluxpp{
 	return false;
       }
     }
-    
+
   };
 
   namespace detail{
@@ -319,12 +319,12 @@ namespace fluxpp{
     public:
       ReducingStateSliceBuilder(state_t_&& initial_value, std::tuple<reducer_ts_...> && reducers ):initial_value_(std::move(initial_value)),
 	reducers_ (std::move(reducers)){};
-      
+
 
 
       template<class event_t,class reducer_t>
       auto with_event_reducer(reducer_t reducer ){
-	
+
 	using namespace std;
 	using new_builder_t = ReducingStateSliceBuilder<
 	  state_t_,
@@ -334,7 +334,7 @@ namespace fluxpp{
 	  template_list<reducer_ts_..., reducer_t>
 	  >,
 	  update_type_>;
-	
+
 	return new_builder_t(std::move(this->initial_value_),
 			     tuple_cat(
 				       std::move(this->reducers_),
@@ -354,7 +354,7 @@ namespace fluxpp{
 	    template_list<reducer_ts_..., reducer_t>
 	  >,
 	  update_type_>;
-	
+
 	return new_builder_t(std::move(this->initial_value_),
 			     tuple_cat(
 				       std::move(this->reducers_),
@@ -362,7 +362,7 @@ namespace fluxpp{
       }
 
 
-      
+
       template<class event_t,class reducer_t>
       auto with_signal_reducer(reducer_t reducer ){
 	using namespace std;
@@ -374,7 +374,7 @@ namespace fluxpp{
 	  template_list<reducer_ts_..., reducer_t>
 	  >,
 	  update_type_>;
-	
+
 	return new_builder_t(std::move(this->initial_value_),
 			     tuple_cat(
 				       std::move(this->reducers_),
@@ -422,23 +422,20 @@ namespace fluxpp{
 
 
 
-  
+
   class State{
-  
-#ifdef NDEBUG
+
   private:
-#else
-  public:
-#endif //NDEBUG
     struct SliceData{
       std::unique_ptr<StateSlice> slice;
       std::vector<widget_instance_id_t> subscriptions;
     };
 #ifdef NDEBUG
-  private:
-#else
   public:
-#endif //NDEBUG
+    using debug_slice_data = SliceData;
+#endif
+
+  private:
     std::unordered_map<std::string,SliceData> slices_;
     RenderTree * render_tree_=nullptr;
   public:
@@ -454,7 +451,7 @@ namespace fluxpp{
 	return nullptr;
       }
     }
-    
+
 
 
     template<class state_t, class ... event_ts>
@@ -466,7 +463,7 @@ namespace fluxpp{
     }
 
 
-    
+
     void set_state_slice(std::string path, std::unique_ptr<StateSlice> slice){
       if (!this->slices_.insert({std::move(path), SliceData{std::move(slice)}}).second){
 	throw "Error problem accepting a new state slice";
@@ -483,7 +480,7 @@ namespace fluxpp{
     }
 
 
-    
+
     void remove_subscription(const std::string& path, widget_instance_id_t instance_id){
       auto it = this->slices_.find(path);
       if(it != this->slices_.end()){
@@ -498,26 +495,35 @@ namespace fluxpp{
     }
 
 
-    
+
     void set_render_tree(RenderTree* render_tree){
       this->render_tree_=render_tree;
     }
+
+
+
+#ifndef NDEBUG
+    const std::unordered_map<std::string,SliceData>&
+    debug_get_slices()const{
+      return this->slices_;
+    }
+#endif
   public:
     StateSlice*  get_state_slice(const std::string & path) ;
-    
+
     void dispatch_event(EventEnvelope& );
-    
+
   };
 
 
-  
+
   template<class state_t_>
   void StateContext<state_t_>::update_state(state_t_ new_state) {
     this->is_updated_ = this->slice_->set_state(new_state);
   }
 
 
-  
+
   template<class state_t_>
   bool StateContext<state_t_>::get_initial_is_updated_value()const{
     switch(this->slice_->update_type()  ){
@@ -532,7 +538,7 @@ namespace fluxpp{
   }
 }
 
-    
+
 
 
 #endif //FLUXPP_STATE_HPP

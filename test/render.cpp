@@ -54,8 +54,8 @@ TEST_CASE("simple render of a widget referencing state", "[render][State][Widget
   state.set_state_slice(addressor,std::move(slice));
   REQUIRE(spy==0);
   {
-    REQUIRE(state.slices_.size() == 1  );
-    auto & slice_data = state.slices_.at(addressor.path());
+    REQUIRE(state.debug_get_slices().size() == 1  );
+    auto & slice_data = state.debug_get_slices().at(addressor.path());
     REQUIRE(slice_data.subscriptions.size() == 0);
   }
   tree.do_render();
@@ -159,7 +159,7 @@ TEST_CASE("render with update", "[render][State][Widget][RenderTree][StateSlice]
       CHECK(tree.debug_get_widget_instances_to_update().size() == 0);
     }
     {
-      auto& slice_data = state.slices_[addressor.path()];
+      auto& slice_data = state.debug_get_slices().at(addressor.path());
       CHECK(slice_data.subscriptions.size() == 1);
     }
     DataEvent<int> event{};
