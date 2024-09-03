@@ -108,17 +108,6 @@ namespace fluxpp{
 
 
 
-  std::pair<widget_instance_id_t,WidgetInstanceData*> RenderTree::add_new_render_node(WidgetInstanceData &&node){
-    const widget_instance_id_t id =this->id_generator_.get_next_instance_id();
-
-    auto [it, ok ] =  this->render_tree_.insert({id, std::move(node)});
-    assert(ok);
-
-    return std::make_pair(id, &it->second );
-  };
-
-
-
   std::optional<WidgetInstanceData*> RenderTree::get_render_node_ptr(widget_instance_id_t id){
     auto it = this->render_tree_.find(id);
     if (it != this->render_tree_.end()){

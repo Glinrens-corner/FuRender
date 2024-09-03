@@ -154,9 +154,9 @@ TEST_CASE("render with update", "[render][State][Widget][RenderTree][StateSlice]
   SECTION("if the state_slice has updated, the next render rerenders the affected widget"){
 
     {
-      CHECK(tree.render_tree_.size() == 2);
-      CHECK(tree.root_instance_ != widget_null_instance);
-      CHECK(tree.widget_instances_to_update_.size() == 0);
+      CHECK(tree.debug_get_render_tree().size() == 2);
+      CHECK(tree.debug_get_root_instance() != widget_null_instance);
+      CHECK(tree.debug_get_widget_instances_to_update().size() == 0);
     }
     {
       auto& slice_data = state.slices_[addressor.path()];
@@ -169,16 +169,16 @@ TEST_CASE("render with update", "[render][State][Widget][RenderTree][StateSlice]
     envelope.path = addressor.path();
     state.dispatch_event(envelope);
     {
-      CHECK(tree.render_tree_.size() == 2);
-      CHECK(tree.root_instance_ != widget_null_instance);
-      CHECK(tree.widget_instances_to_update_.size() == 1);
+      CHECK(tree.debug_get_render_tree().size() == 2);
+      CHECK(tree.debug_get_root_instance() != widget_null_instance);
+      CHECK(tree.debug_get_widget_instances_to_update().size() == 1);
     }
 
     tree.do_render();
     {
       //      CHECK(tree.render_tree_.size() == 2);
-      CHECK(tree.root_instance_ != widget_null_instance);
-      CHECK(tree.widget_instances_to_update_.size() == 0);
+      CHECK(tree.debug_get_root_instance()!= widget_null_instance);
+      CHECK(tree.debug_get_widget_instances_to_update().size() == 0);
     }
     CHECK(spy1==2);
 
