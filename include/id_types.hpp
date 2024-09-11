@@ -67,8 +67,11 @@ namespace fluxpp {
 
   using widget_id_t = detail::Id<detail::widget_id_tag_t> ;
   using widget_instance_id_t = detail::Id<detail::widget_instance_id_tag_t> ;
-
+  
   constexpr widget_instance_id_t widget_null_instance(0);
+
+
+  using explicit_key_t = uint32_t ;
 } // namespace fluxpp
 
 

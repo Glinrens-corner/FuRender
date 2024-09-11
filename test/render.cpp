@@ -79,7 +79,7 @@ TEST_CASE("render without update", "[render][State][Widget][RenderTree]"){
   auto widget = create_widget_with_selectors<WidgetType::Application>( )
     .with_render_function([&spy1,client_widget ](Context<WidgetType::Application>& context){
 
-      None n = context.immediate_render(static_cast<std::shared_ptr<Widget<WidgetType::Client, None>>>(client_widget));
+      None n = context.immediate_render(1, static_cast<std::shared_ptr<Widget<WidgetType::Client, None>>>(client_widget));
       (void) n;
       spy1 +=1;
       return None::none;
@@ -127,7 +127,7 @@ TEST_CASE("render with update", "[render][State][Widget][RenderTree][StateSlice]
   auto app_widget = create_widget_with_selectors<WidgetType::Application>( addressor.create_selector())
     .with_render_function([&spy1,client_widget ](Context<WidgetType::Application>& context, const int& other_value){
 
-      None n = context.immediate_render(static_cast<std::shared_ptr<Widget<WidgetType::Client, None>>>(client_widget));
+      None n = context.immediate_render(1,static_cast<std::shared_ptr<Widget<WidgetType::Client, None>>>(client_widget));
       (void) n;
       spy1 +=1;
       return None::none;
@@ -176,7 +176,7 @@ TEST_CASE("render with update", "[render][State][Widget][RenderTree][StateSlice]
 
     tree.do_render();
     {
-      //      CHECK(tree.render_tree_.size() == 2);
+      CHECK(tree.debug_get_render_tree().size() == 2);
       CHECK(tree.debug_get_root_instance()!= widget_null_instance);
       CHECK(tree.debug_get_widget_instances_to_update().size() == 0);
     }

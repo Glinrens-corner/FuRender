@@ -16,9 +16,10 @@
 #include "context.hpp"
 
 #include "id_types.hpp"
+#include "render_tree.hpp"
 #include "value_holder.hpp"
 
-#include "render_tree.hpp"
+//#include "render_tree.hpp"
 
 #include "state.hpp"
 
@@ -47,11 +48,15 @@ namespace fluxpp {
 
 
 
-    /** @brief apply a tuple of arguments to the render function of a widget.
+    /** @brief calls the render method of a widget.
      *
+     * @param widget the widget whose render method is to be called.
+     * @param context the context to render the widget with.
+     * @param tuple the remaining arguments of the render method.
+     * @param - type deduction argument ignored. 
      */
     template <class return_t, class widget_t,class context_t, class tuple_t, int ... numbers>
-    return_t apply_tuple(widget_t& widget, context_t & context, const tuple_t& tuple, const sequence< numbers ... >& ){
+    return_t call_render(widget_t& widget, context_t & context, const tuple_t& tuple, const sequence< numbers ... >& ){
       return widget.render(context,std::get<numbers>(tuple)... );
     }
 
@@ -61,16 +66,23 @@ namespace fluxpp {
 
     /** @brief fill a tuple with the values refered to by a tuple of selectors.
      *
+     * @tparam i index of the current field to be filled
+     * @param args_tuple tuple of the arguments later to be supplied to the render method.
+     * @param selector_tuple tuple of the selectors, selecting the arguments.
      */
     template <std::size_t i, class args_tuple_t, class selector_tuple_t >
     void fill_args_tuple(args_tuple_t& args_tuple, const selector_tuple_t& selector_tuple, State& state){
       if constexpr (i < std::tuple_size_v<args_tuple_t>){
+	// TODO: communication via nullptr is forbidden
 	const std::tuple_element_t< i, args_tuple_t>* p =  state.get_state_ptr(std::get<i>(selector_tuple));
 	if (p){
 	  std::get<i>(args_tuple) = *p;
 	} else {
+	  assert(false && "no value from this selector");
 	}
-	 
+
+
+	// fill the next field of the tuple
 	fill_args_tuple<i+1>(args_tuple, selector_tuple, state);
       } else{
 	return;
@@ -89,41 +101,48 @@ namespace fluxpp {
   class RenderVisitor{
   private:
     State * state_;
-    widget_instance_id_t instance_id_;
-    std::shared_ptr<BaseWidget> widget_;
-    widget_instance_id_t parent_id_; 
     RenderTree* tree_;
-    std::optional<WidgetInstanceData> node_opt_{};
+    explicit_key_t key_;
+    std::shared_ptr<BaseWidget> widget_;
+    widget_instance_id_t parent_id_;
+    widget_instance_id_t instance_id_;    
+    WidgetInstanceData new_data_{};
+    std::optional<WidgetInstanceData*> old_data_  = nullptr;
+    WidgetInstanceData* final_data_ptr_ = nullptr;
   public:
     RenderVisitor(
 		  State* state,
+		  explicit_key_t key,
 		  widget_instance_id_t instance_id,
 		  std::shared_ptr<BaseWidget> widget,
 		  widget_instance_id_t parent_id,
 		  RenderTree* tree)
       :state_(state),
-       instance_id_(instance_id),
+       tree_(tree),
+       key_(key),
        widget_(std::move(widget)),
        parent_id_(parent_id),
-       tree_(tree){}
+       instance_id_(instance_id)
+       {}
 
 
 
-    /** @brief set up all arguments for the widget.render function
+    /** @brief set up all arguments for the widget.render function and call it.
      *
      */
     template< class widget_t>
     void render(widget_t& widget) {
+      this->set_old_data();
+      
       constexpr WidgetType widget_type_ = widget_t::get_widget_type();
       using return_t = typename widget_t::return_t;
-      WidgetInstanceData* node = this->get_node_ptr();
       
       static_assert(!std::is_same_v<return_t, void>, "a widgets return type may not be void" );
       static_assert(std::is_default_constructible_v<return_t>, "a widgets return type must be default constructible");
       static_assert(std::is_copy_constructible_v<return_t>,
 		    "a widgets return type must bet copy constructible");
 
-      Context<widget_type_> context(this->instance_id_,node, this->tree_, this->state_);
+      Context<widget_type_> context(this->instance_id_,this->old_data_, this->tree_, this->state_);
       
       using args_tuple_t = typename widget_t::args_tuple_t;
       args_tuple_t args_tuple{};
@@ -132,34 +151,29 @@ namespace fluxpp {
 
       using sequence_t =  typename detail::sequence_generator<std::tuple_size_v<args_tuple_t > >::sequence_t;
 
-      ValueHolder<return_t>* p = nullptr;
-      if(node->return_value ){
-	p = dynamic_cast<ValueHolder<return_t>* >(node->return_value.get()) ; 
-	if(!p){
-	  // ERROR return type isn't identical to the previous one.
-          node->return_value = std::unique_ptr<ValueHolderBase>(
-								new ValueHolder<return_t>(
-											       detail::apply_tuple<return_t>(widget , context, args_tuple,  sequence_t() )         )
-								);
-	}else {
-	  p->data = detail::apply_tuple<return_t>(widget , context, args_tuple,  sequence_t() );
-	}
-      } else {
-            node->return_value = std::unique_ptr<ValueHolderBase>(
-								  new ValueHolder<return_t>(
-											    detail::apply_tuple<return_t>(widget , context, args_tuple,  sequence_t() )
-											    )
-                );
+      this->new_data_.widget = this->widget_;
+      this->new_data_.parent = this->parent_id_;
+      this->new_data_.return_value =
+	std::make_unique<ValueHolder<return_t>>(
+						detail::call_render<return_t>(widget , context, args_tuple,  sequence_t() )
+						);// this renders the widget
+      this->new_data_.children = context.get_children();
+      for ( auto instance: context.get_orphaned_children()){
+	this->tree_->delete_instance(instance);
       }
-      this->store_render_node();
-      this->tree_->rendered_instance(this->instance_id_);
+      this->finalize();
       return;
     }
 
-  private:
-    WidgetInstanceData* get_node_ptr();
 
-    void store_render_node();
+
+    WidgetInstanceData* get_child_instance_data_ptr(){
+      return this->final_data_ptr_;
+    }
+  private:
+    void set_old_data();
+
+    void finalize();
   };
 
 }

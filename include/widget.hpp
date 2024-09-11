@@ -10,7 +10,6 @@
 #include <optional>
 #include <utility>
 
-
 #include "render_visitor.hpp"
 #include "selector.hpp"
 #include "basic.hpp"
@@ -33,7 +32,7 @@ namespace fluxpp {
 
     virtual std::optional<std::reference_wrapper<const std::string>> get_nth_selector_address(std::size_t i)=0;
 
-    widget_id_t get_widget_id(){
+    widget_id_t get_widget_id()const{
       return this->widget_id_;
     }
   };
