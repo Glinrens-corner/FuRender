@@ -5,7 +5,7 @@
 #include <type_traits>
 
 namespace fluxpp{
-  /** @brief Class that communicates the path and elementtype of a StateSlice to a widget
+  /** @brief Class that communicates the path and elementtype of a StateSlice to a Widget
    *
    *  @tparam selected_t_ type of the value of the  selected state, must be default constructible.
    */
