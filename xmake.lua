@@ -14,9 +14,10 @@ end
 target("lib")
     set_kind("static")
     set_default(true)
-    set_filename("furender")
+    set_basename("furender")
     add_files("src/*.cpp")
     set_languages("cxx17")
+    add_headerfiles("include/*.hpp","src/*.hpp")
     add_includedirs("include","src")
 
 
