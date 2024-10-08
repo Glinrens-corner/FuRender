@@ -11,12 +11,19 @@ if is_mode("debug") then
    set_optimize("none")
 end
 
+target("lib")
+    set_kind("static")
+    set_default(true)
+    set_filename("furender")
+    add_files("src/*.cpp")
+    set_languages("cxx17")
+    add_includedirs("include","src")
+
 
 target("test")
     set_kind("binary")
-    set_filename("fluxpp_test")
+    set_filename("furender_test")
     set_targetdir(".")
-    set_default(true)
     add_files("src/*.cpp")
     add_packages("vcpkg::catch2")
     set_warnings("all")
@@ -25,3 +32,4 @@ target("test")
     add_includedirs("include","src")
 --    add_links("Catch2Main", "Catch2" )
     add_files("test/*.cpp")
+
