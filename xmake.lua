@@ -19,7 +19,7 @@ if is_mode("debug") then
    set_optimize("none")
 end
 
-target("lib")
+target("basis_framework_glinren_furender")
     set_kind("static")
     set_default(true)
     set_basename("furender")
