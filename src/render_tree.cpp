@@ -10,7 +10,7 @@
 #include "widget.hpp"
 
 
-namespace fluxpp{
+namespace furender{
 
 
 
@@ -96,20 +96,20 @@ namespace fluxpp{
 
   void RenderTree::rerender_instance(widget_instance_id_t new_instance_id){
     auto child_it = this->render_tree_.find(new_instance_id );
-    
+
     assert(child_it != this->render_tree_.end() && "instance to rerender not found");
     explicit_key_t key;
     if(child_it->second.parent == widget_null_instance){
       key = 0;
     } else {
       auto parent_it = this->render_tree_.find(new_instance_id );
-      
+
       assert(parent_it != this->render_tree_.end() && "no parent instance, but not root");
       auto mapping_it = std::find_if(parent_it->second.children.begin(),parent_it->second.children.end(), [new_instance_id](const std::pair<explicit_key_t, widget_instance_id_t >& pair){return pair.second == new_instance_id  ;});
       assert(mapping_it != parent_it->second.children.end() && "instance not a child of parent");
       key = mapping_it->first;
     }
-    
+
     RenderVisitor visitor(this->state_, key, new_instance_id, child_it->second.widget, child_it->second.parent, this);
     child_it->second.widget->accept(visitor);
   }
@@ -142,7 +142,7 @@ namespace fluxpp{
     auto it = this->render_tree_.find(instance_id);
     if(it != this->render_tree_.end()){
       for(std::size_t ipath=0; ; ipath++){
-	
+
 	std::optional<std::reference_wrapper<const std::string>>     path_opt = it->second.widget->get_nth_selector_address(ipath);
 	if(path_opt.has_value()){
 	  this->state_->remove_subscription( path_opt.value().get(),instance_id);
@@ -151,7 +151,7 @@ namespace fluxpp{
 	}
 	for (auto [key, child] : it->second.children){
 	  (void)key;
-	  this->deletion_stack_.push_back(child);	
+	  this->deletion_stack_.push_back(child);
 	}
       }
       auto nerased = this->render_tree_.erase(instance_id);
@@ -160,11 +160,11 @@ namespace fluxpp{
   }
 
 
-  
+
   WidgetInstanceData* RenderTree::insert_instance(widget_instance_id_t instance_id, WidgetInstanceData&& data){
     // Todo dispose of the old widgetInstance
     this->delete_instance(instance_id);
-    
+
     auto [inserter , ok] = this->render_tree_.insert({instance_id,std::move(data)});
     assert(ok && "insertion of new widget failed");
     this->widget_instances_to_update_.erase(instance_id);
@@ -194,7 +194,7 @@ namespace fluxpp{
   }
 
 
-  
+
 
 
 

@@ -1,5 +1,5 @@
-#ifndef FLUXPP_WIDGET_HPP
-#define FLUXPP_WIDGET_HPP
+#ifndef FURENDER_WIDGET_HPP
+#define FURENDER_WIDGET_HPP
 
 #include <cstddef>
 #include <string_view>
@@ -16,7 +16,7 @@
 #include "context.hpp"
 #include "id_types.hpp"
 
-namespace fluxpp {
+namespace furender {
 
   /** @brief virtual base class for Widgets
    *
@@ -218,4 +218,4 @@ namespace fluxpp {
 
 }
 
-#endif // FLUXPP_WIDGET_HPP
+#endif // FURENDER_WIDGET_HPP

@@ -4,9 +4,9 @@
 #include "render_tree.hpp"
 #include "widget.hpp"
 
-namespace fluxpp{
+namespace furender{
   void RenderVisitor::set_old_data(){
-    this->old_data_  = this->tree_->get_render_node_ptr( this->instance_id_);    
+    this->old_data_  = this->tree_->get_render_node_ptr( this->instance_id_);
   }
 
 

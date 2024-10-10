@@ -1,9 +1,9 @@
-#ifndef FLUXPP_CONTEXT_BASE_HPP
-#define FLUXPP_CONTEXT_BASE_HPP
+#ifndef FURENDER_CONTEXT_BASE_HPP
+#define FURENDER_CONTEXT_BASE_HPP
 
 #include "basic.hpp"
 
-namespace fluxpp{
+namespace furender{
   struct WidgetInstanceData;
   class RenderTree;
   class State;
@@ -16,9 +16,4 @@ namespace fluxpp{
 
 
 
-#endif // FLUXPP_CONTEXT_BASE_HPP
-
-
-
-
-
+#endif // FURENDER_CONTEXT_BASE_HPP

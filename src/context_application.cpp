@@ -8,14 +8,14 @@
 
 #include "widget.hpp"
 
-namespace fluxpp{
+namespace furender{
   void Context<WidgetType::Application>::render(explicit_key_t key, std::shared_ptr<DeferredWidget<WidgetType::Client> > widget)const{
     assert(false&& "render is not yet implemented");
-    
+
   }
 
 
-  
+
   bool Context<WidgetType::Application>::subinstance_is_current(const BaseWidget& widget, widget_instance_id_t instance_id, const WidgetInstanceData& data)const{
     return (widget.get_widget_id() == data.widget->get_widget_id()
 	    and (not this->tree_->has_to_be_updated(instance_id)));
@@ -34,7 +34,7 @@ namespace fluxpp{
     return *node_ptr;
   }
 
-    
+
   std::optional<std::pair<widget_instance_id_t, WidgetInstanceData*> > Context<WidgetType::Application>::get_old_instance_data(explicit_key_t key, const BaseWidget& ) const{
     auto  it = std::find_if(this->rendered_children_.begin(),
 		 this->rendered_children_.end(),

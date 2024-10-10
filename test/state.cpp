@@ -11,7 +11,7 @@
 
 
 TEST_CASE("test State", "[State]"){
-  using namespace fluxpp;
+  using namespace furender;
 
   // spies to deteckt how often the state_slice/ widget_render function are executed.
   int slice_spy=0;
@@ -21,7 +21,7 @@ TEST_CASE("test State", "[State]"){
   const std::string path = "path_to_state";
 
 
-  // we will save a  pointer  to the StateSlice to later assert properties of it.  
+  // we will save a  pointer  to the StateSlice to later assert properties of it.
   TypedStateSlice<int> * slice_ptr;
 
   // create a slice ()
@@ -29,7 +29,7 @@ TEST_CASE("test State", "[State]"){
     // Set a handler for DataEvent<int>
     //DataEvent<T> for a State containing an U requires a handler  signature of void(StateContext<U>& , const T& );
     // in production code the handler shouldn't capture anything by reference.
-    // it has to be pureish. 
+    // it has to be pureish.
     .with_data_reducer<int>([&slice_spy](StateContext<int>& context, const int& new_int){
       slice_spy++;
       context.update_state(new_int);
@@ -40,7 +40,7 @@ TEST_CASE("test State", "[State]"){
 
 
 
-  
+
   auto  app = create_widget_with_selectors<WidgetType::Application>()
     .with_render_function([&widget_spy](Context<WidgetType::Application>&){
       widget_spy++;
@@ -83,15 +83,15 @@ TEST_CASE("test State", "[State]"){
 
 
 TEST_CASE("test ReducingStateSlice with a move-only reducer", "[StateSlice]"){
-  using namespace fluxpp;
-  
+  using namespace furender;
+
   class NoCopyReducer{
   private:
     int* outer_;
   public:
     NoCopyReducer(int* outer):outer_(outer){};
 
-    void operator()(fluxpp::StateContext<int>& context, const int &new_int){
+    void operator()(furender::StateContext<int>& context, const int &new_int){
       *outer_ = new_int;
       context.update_state(new_int);
     }

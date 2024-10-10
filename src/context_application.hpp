@@ -1,5 +1,5 @@
-#ifndef FLUXPP_CONTEXT_APPLICATION_HPP
-#define FLUXPP_CONTEXT_APPLICATION_HPP
+#ifndef FURENDER_CONTEXT_APPLICATION_HPP
+#define FURENDER_CONTEXT_APPLICATION_HPP
 
 #include <memory>
 #include <vector>
@@ -12,7 +12,7 @@
 #include "value_holder.hpp"
 #include "widget_fwd.hpp"
 
-namespace fluxpp{
+namespace furender{
 
   template <>
   class Context<WidgetType::Application>{
@@ -50,23 +50,23 @@ namespace fluxpp{
       // instance_id and data of previous rendering
       std::optional<std::pair<widget_instance_id_t, WidgetInstanceData*> > old_child_data = this->get_old_instance_data(key, *widget.get());
 
-      // if there is old data, it is the same instance so reuse the instance id 
+      // if there is old data, it is the same instance so reuse the instance id
       widget_instance_id_t instance_id =
 	old_child_data.has_value()
 	? old_child_data.value().first
 	: this->tree_->get_next_instance_id();
 
-      
+
       //erase the id of the next rendered child_instance from the array of orphaned children.
-      // only necessary if the instance_id is reused. otherwise it was newly created and was not used before. 
+      // only necessary if the instance_id is reused. otherwise it was newly created and was not used before.
       if (old_child_data.has_value()){
 	auto it = std::find(this->orphaned_children_.begin(),
 			    this->orphaned_children_.end(), instance_id);
 	if(it != this->orphaned_children_.end()){
 	  this->orphaned_children_.erase(it);
 	}
-      } 
-      
+      }
+
 
       // if the old instance is still current, return the value of the last execution.
       if (old_child_data.has_value()){
@@ -97,7 +97,7 @@ namespace fluxpp{
     }
 
 
-    /** @brief get the ids of the children of the last rendered parent instance, that aren't used anymore 
+    /** @brief get the ids of the children of the last rendered parent instance, that aren't used anymore
      *
      */
     const std::vector<widget_instance_id_t>  get_orphaned_children(){
@@ -108,7 +108,7 @@ namespace fluxpp{
     // fully specialized part of the render method.
     const WidgetInstanceData& render_i(explicit_key_t key,widget_instance_id_t child_id, std::shared_ptr<DeferredWidget<WidgetType::Client> > widget);
 
-    // determine if there is a 
+    // determine if there is a
     std::optional<std::pair<widget_instance_id_t, WidgetInstanceData*> > get_old_instance_data(explicit_key_t key, const BaseWidget& widget) const;
 
     // determine if the child instance can be reused or has to be rerendered.
@@ -119,4 +119,4 @@ namespace fluxpp{
 
 
 
-#endif //FLUXPP_CONTEXT_APPLICATION_HPP
+#endif //FURENDER_CONTEXT_APPLICATION_HPP

@@ -1,5 +1,5 @@
-#ifndef FLUXPP_CONTEXT_CLIENT_HPP
-#define FLUXPP_CONTEXT_CLIENT_HPP
+#ifndef FURENDER_CONTEXT_CLIENT_HPP
+#define FURENDER_CONTEXT_CLIENT_HPP
 
 #include <memory>
 #include <optional>
@@ -10,7 +10,7 @@
 #include "context_base.hpp"
 #include "widget_fwd.hpp"
 
-namespace fluxpp{
+namespace furender{
 
   template<>
   class Context<WidgetType::Client>{
@@ -54,4 +54,4 @@ namespace fluxpp{
 
 }
 
-#endif // FLUXPP_CONTEXT_CLIENT_HPP
+#endif // FURENDER_CONTEXT_CLIENT_HPP

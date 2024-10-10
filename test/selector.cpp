@@ -8,9 +8,8 @@
 
 
 TEST_CASE("Selector", "[selector]"){
-  using namespace fluxpp;
+  using namespace furender;
   auto S = Selector<int>("asdf");
   CHECK(std::is_same<typename decltype(S)::selected_t, int>::value);
   CHECK(S.path() == "asdf");
 }
-

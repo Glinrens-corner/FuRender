@@ -1,5 +1,5 @@
-#ifndef FLUXPP_BACKEND_HPP
-#define FLUXPP_BACKEND_HPP
+#ifndef FURENDER_BACKEND_HPP
+#define FURENDER_BACKEND_HPP
 
 #include <memory>
 
@@ -7,9 +7,9 @@
 #include "id_types.hpp"
 
 
-namespace fluxpp{
+namespace furender{
 
-  
+
   class Command{
   public:
     command_type_id command_type;
@@ -20,14 +20,14 @@ namespace fluxpp{
       value_transferer(std::move(value_transferer)){}
 
 
-    
+
   };
 
-  
+
   class Backend{
   public:
     virtual command_type_id get_command_id(std::string_view command_name);
-    
+
   };
 }
 

@@ -1,11 +1,11 @@
-#ifndef FLUXPP_ADDRESSOR_HPP
-#define FLUXPP_ADDRESSOR_HPP
+#ifndef FURENDER_ADDRESSOR_HPP
+#define FURENDER_ADDRESSOR_HPP
 
 #include <string>
 
 #include "selector.hpp"
 
-namespace fluxpp{
+namespace furender{
   /** @brief Class to record state, accepted events and path of a state slice
    *
    */
@@ -28,10 +28,10 @@ namespace fluxpp{
 
     const std::string& path()const{
       return this->path_;
-    };    
+    };
   };
 
 
 }
 
-#endif //FLUXPP_ADDRESSOR_HPP
+#endif //FURENDER_ADDRESSOR_HPP

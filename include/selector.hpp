@@ -1,10 +1,10 @@
-#ifndef FLUXPP_SELECTOR_HPP
-#define FLUXPP_SELECTOR_HPP
+#ifndef FURENDER_SELECTOR_HPP
+#define FURENDER_SELECTOR_HPP
 
 #include <string>
 #include <type_traits>
 
-namespace fluxpp{
+namespace furender{
   /** @brief Class that communicates the path and elementtype of a StateSlice to a Widget
    *
    *  @tparam selected_t_ type of the value of the  selected state, must be default constructible.
@@ -35,4 +35,4 @@ namespace fluxpp{
 
 }
 
-#endif // FLUXPP_SELECTOR_HPP
+#endif // FURENDER_SELECTOR_HPP

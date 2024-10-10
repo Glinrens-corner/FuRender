@@ -1,5 +1,5 @@
-#ifndef FLUXPP_RENDER_TREE_HPP
-#define FLUXPP_RENDER_TREE_HPP
+#ifndef FURENDER_RENDER_TREE_HPP
+#define FURENDER_RENDER_TREE_HPP
 
 #include <functional>
 #include <memory>
@@ -20,7 +20,7 @@
 
 
 
-namespace fluxpp{
+namespace furender{
 
 
   /** @brief struct that holds all information of a given widget instance
@@ -55,7 +55,7 @@ namespace fluxpp{
 
 
 
-  /** @brief holder class for the widget or render tree. 
+  /** @brief holder class for the widget or render tree.
    *
    */
   class RenderTree{
@@ -88,15 +88,15 @@ namespace fluxpp{
      */
     void do_render();
 
-    /** add a freshly rendered instance to the render_tree. 
+    /** add a freshly rendered instance to the render_tree.
      *
-     * 
+     *
      */
     WidgetInstanceData* insert_instance(widget_instance_id_t , WidgetInstanceData&&);
 
-    /** @brief get the pointer to the datao of an instance. 
+    /** @brief get the pointer to the datao of an instance.
      *
-     * if the return  has a value, it is dereferencable. 
+     * if the return  has a value, it is dereferencable.
      */
     std::optional<WidgetInstanceData*> get_render_node_ptr(widget_instance_id_t);
 
@@ -105,7 +105,7 @@ namespace fluxpp{
      */
     bool has_to_be_updated(widget_instance_id_t instance_id)const;
 
-    
+
     void set_render_node(widget_instance_id_t id, WidgetInstanceData&& new_node);
 
     void delete_instance(widget_instance_id_t );
@@ -173,4 +173,4 @@ namespace fluxpp{
 
 }
 
-#endif //FLUXPP_RENDER_TREE_HPP
+#endif //FURENDER_RENDER_TREE_HPP

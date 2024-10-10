@@ -11,10 +11,10 @@
 #include "widget.hpp"
 
 TEST_CASE("simple render ()", "[render][State][Widget][RenderTree]"){
-  using namespace fluxpp;
+  using namespace furender;
   int spy = 0;
 
-  auto widget = create_widget_with_selectors<fluxpp::WidgetType::Application>()
+  auto widget = create_widget_with_selectors<furender::WidgetType::Application>()
     .with_render_function([&spy ](Context<WidgetType::Application>&){
       spy=4;
       return None::none;
@@ -30,16 +30,16 @@ TEST_CASE("simple render ()", "[render][State][Widget][RenderTree]"){
 
 
 TEST_CASE("simple render of a widget referencing state", "[render][State][Widget][RenderTree][StateSlice]"){
-  using namespace fluxpp;
+  using namespace furender;
   int spy = 0;
   auto slice = create_state_slice<int>(4)
-    .with_data_reducer<int>([](fluxpp::StateContext<int>& context, const int &new_int){
+    .with_data_reducer<int>([](furender::StateContext<int>& context, const int &new_int){
       context.update_state(new_int);
     }).make_unique_ptr();
 
   auto addressor = slice->create_addressor("here");
 
-  auto widget = create_widget_with_selectors<fluxpp::WidgetType::Application>( addressor.create_selector())
+  auto widget = create_widget_with_selectors<furender::WidgetType::Application>( addressor.create_selector())
     .with_render_function([&spy ](Context<WidgetType::Application>&, const int new_value){
       spy=new_value;
       return None::none;
@@ -65,7 +65,7 @@ TEST_CASE("simple render of a widget referencing state", "[render][State][Widget
 
 
 TEST_CASE("render without update", "[render][State][Widget][RenderTree]"){
-  using namespace fluxpp;
+  using namespace furender;
   int spy1 = 0;
   int spy2 = 100;
 
@@ -94,7 +94,7 @@ TEST_CASE("render without update", "[render][State][Widget][RenderTree]"){
   tree.do_render();
   CHECK(spy1==1);
   CHECK(spy2==101);
-  SECTION("fluxpp tracks if a widget has to be updated"){
+  SECTION("furender tracks if a widget has to be updated"){
 
     tree.do_render();
     CHECK(spy1==1);
@@ -107,12 +107,12 @@ TEST_CASE("render without update", "[render][State][Widget][RenderTree]"){
 
 
 TEST_CASE("render with update", "[render][State][Widget][RenderTree][StateSlice]"){
-  using namespace fluxpp;
+  using namespace furender;
   int spy1 = 0;
   int spy2 = 100;
 
   auto slice = create_state_slice<int>(1)
-    .with_data_reducer<int>([](fluxpp::StateContext<int>& context, const int &new_int){
+    .with_data_reducer<int>([](furender::StateContext<int>& context, const int &new_int){
       context.update_state(new_int);
     }).make_unique_ptr();
 
@@ -188,7 +188,7 @@ TEST_CASE("render with update", "[render][State][Widget][RenderTree][StateSlice]
 
 
 TEST_CASE("id_type","[id]"){
-  using namespace fluxpp;
+  using namespace furender;
   struct id_tag_t;
 
   using id_t = detail::Id<id_tag_t>;

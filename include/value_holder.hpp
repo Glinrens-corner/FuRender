@@ -1,10 +1,10 @@
-#ifndef FLUXPP_VALUE_HOLDER_HPP
-#define FLUXPP_VALUE_HOLDER_HPP
+#ifndef FURENDER_VALUE_HOLDER_HPP
+#define FURENDER_VALUE_HOLDER_HPP
 
 #include <memory>
 #include <type_traits>
 
-namespace fluxpp{
+namespace furender{
 
   /** @brief base class to hold an arbitrary value
    *
@@ -40,6 +40,6 @@ namespace fluxpp{
   private:
     static_assert(std::is_move_constructible_v<value_t_>, "value must be move constructible");
   };
-} // namespace fluxpp
+} // namespace furender
 
-#endif //FLUXPP_VALUE_HOLDER_HPP
+#endif //FURENDER_VALUE_HOLDER_HPP

@@ -32,7 +32,7 @@ target_end()
 if is_config("modus", "full") then
 add_requires("vcpkg::catch2 3.6.0")
 
-    
+
 target("test")
     set_kind("binary")
     set_filename("furender_test")
@@ -43,7 +43,6 @@ target("test")
 --    set_optimize("fastest")
     set_languages("cxx17")
     add_includedirs("include","src")
---    add_links("Catch2Main", "Catch2" )
     add_files("test/*.cpp")
 
 end

@@ -3,7 +3,7 @@
 #include "render_tree.hpp"
 
 
-namespace fluxpp{
+namespace furender{
   StateSlice * State::get_state_slice(const std::string &path){
     auto it = this->slices_.find(path);
     if (it != this->slices_.end()){
@@ -29,7 +29,6 @@ namespace fluxpp{
     }else {
       // Error, dispatch not found
     }
-    
+
   }
 }
-

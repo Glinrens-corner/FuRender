@@ -1,12 +1,12 @@
-#ifndef FLUXPP_EVENT_HPP
-#define FLUXPP_EVENT_HPP
+#ifndef FURENDER_EVENT_HPP
+#define FURENDER_EVENT_HPP
 
 #include <memory>
 
 #include "basic.hpp"
 
 
-namespace fluxpp{
+namespace furender{
 
   /** @brief base class for all event types
    *
@@ -21,7 +21,7 @@ namespace fluxpp{
 
 
   /** @brief an event type to send data of any specific type through the event system.
-   * 
+   *
    */
   template <class data_t_>
   class DataEvent :
@@ -39,7 +39,7 @@ namespace fluxpp{
    */
   class SignalEvent :
     public BaseEvent{
-    
+
   };
 
 
@@ -51,8 +51,8 @@ namespace fluxpp{
     BaseEvent * event;
     std::string path;
   };
-  
+
 }
 
 
-#endif // FLUXPP_EVENT_HPP
+#endif // FURENDER_EVENT_HPP

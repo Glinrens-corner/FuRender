@@ -1,5 +1,5 @@
-#ifndef FLUXPP_BASIC_HPP
-#define FLUXPP_BASIC_HPP
+#ifndef FURENDER_BASIC_HPP
+#define FURENDER_BASIC_HPP
 
 #include <tuple>
 
@@ -9,8 +9,8 @@
 #define DEBUG_ONLY(x)
 #endif
 
-namespace fluxpp{
-  
+namespace furender{
+
   // helper class to debug template instanciation
   template <class T>
   struct error_s;
@@ -19,9 +19,9 @@ namespace fluxpp{
   template <class T>
   using error =  typename error_s<T>::type;
 
-  
+
   template <class ... arg_ts_>
-  using template_list = std::tuple <arg_ts_ ... >;  
+  using template_list = std::tuple <arg_ts_ ... >;
 
   template <std::size_t i, class template_list_t>
   using template_list_element = std::tuple_element< i, template_list_t>;
@@ -29,7 +29,7 @@ namespace fluxpp{
   enum class None{
     none
   };
-  
+
   enum class WidgetType{
     Application,
     Client,
@@ -37,4 +37,4 @@ namespace fluxpp{
   };
 }
 
-#endif //FLUXPP_BASIC_HPP
+#endif //FURENDER_BASIC_HPP

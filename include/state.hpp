@@ -1,5 +1,5 @@
-#ifndef FLUXPP_STATE_HPP
-#define FLUXPP_STATE_HPP
+#ifndef FURENDER_STATE_HPP
+#define FURENDER_STATE_HPP
 
 #include <cassert>
 #include <tuple>
@@ -15,7 +15,7 @@
 #include "addressor.hpp"
 #include "id_types.hpp"
 
-namespace fluxpp{
+namespace furender{
   class RenderTree;
 
   enum class UpdateType{
@@ -541,4 +541,4 @@ namespace fluxpp{
 
 
 
-#endif //FLUXPP_STATE_HPP
+#endif //FURENDER_STATE_HPP

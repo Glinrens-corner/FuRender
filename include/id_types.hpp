@@ -1,12 +1,12 @@
-#ifndef FLUXPP_ID_TYPES_HPP
-#define FLUXPP_ID_TYPES_HPP
+#ifndef FURENDER_ID_TYPES_HPP
+#define FURENDER_ID_TYPES_HPP
 
 #include <cstdint>
 #include <iostream>
 
 #include "basic.hpp"
 
-namespace fluxpp {
+namespace furender {
 
   namespace detail{
     template <class tag_t_, class internal_t_=uint64_t  >
@@ -67,21 +67,21 @@ namespace fluxpp {
 
   using widget_id_t = detail::Id<detail::widget_id_tag_t> ;
   using widget_instance_id_t = detail::Id<detail::widget_instance_id_tag_t> ;
-  
+
   constexpr widget_instance_id_t widget_null_instance(0);
 
 
   using explicit_key_t = uint32_t ;
-} // namespace fluxpp
+} // namespace furender
 
 
 
 template <class tag_t_, class internal_t_>
-struct std::hash<fluxpp::detail::Id<tag_t_, internal_t_>>{
-  std::size_t operator()(const fluxpp::detail::Id<tag_t_, internal_t_>& id)const{
+struct std::hash<furender::detail::Id<tag_t_, internal_t_>>{
+  std::size_t operator()(const furender::detail::Id<tag_t_, internal_t_>& id)const{
     return std::hash<internal_t_>{}(id.value());
   }
 };
 
 
-#endif //FLUXPP_ID_TYPES_HPP
+#endif //FURENDER_ID_TYPES_HPP

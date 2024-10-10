@@ -1,6 +1,6 @@
 
-#ifndef FLUXPP_RENDER_VISITOR_HPP
-#define FLUXPP_RENDER_VISITOR_HPP
+#ifndef FURENDER_RENDER_VISITOR_HPP
+#define FURENDER_RENDER_VISITOR_HPP
 
 #include <functional>
 #include <memory>
@@ -23,8 +23,8 @@
 
 #include "state.hpp"
 
-namespace fluxpp {
-  
+namespace furender {
+
   namespace detail{
     /* classes to generate a sequence of integers
      *
@@ -33,12 +33,12 @@ namespace fluxpp {
     struct sequence{};
 
 
-    
+
     template<int first, int ...numbers>
     struct sequence_generator: sequence_generator<first-1,first-1,numbers...>{};
 
 
-    
+
     template <int ... numbers>
     struct sequence_generator<0, numbers...> {
       using sequence_t = sequence<numbers...>;
@@ -53,7 +53,7 @@ namespace fluxpp {
      * @param widget the widget whose render method is to be called.
      * @param context the context to render the widget with.
      * @param tuple the remaining arguments of the render method.
-     * @param - type deduction argument ignored. 
+     * @param - type deduction argument ignored.
      */
     template <class return_t, class widget_t,class context_t, class tuple_t, int ... numbers>
     return_t call_render(widget_t& widget, context_t & context, const tuple_t& tuple, const sequence< numbers ... >& ){
@@ -87,7 +87,7 @@ namespace fluxpp {
       } else{
 	return;
       }
-      
+
     }
   }
 
@@ -105,7 +105,7 @@ namespace fluxpp {
     explicit_key_t key_;
     std::shared_ptr<BaseWidget> widget_;
     widget_instance_id_t parent_id_;
-    widget_instance_id_t instance_id_;    
+    widget_instance_id_t instance_id_;
     WidgetInstanceData new_data_{};
     std::optional<WidgetInstanceData*> old_data_  = nullptr;
     WidgetInstanceData* final_data_ptr_ = nullptr;
@@ -133,17 +133,17 @@ namespace fluxpp {
     template< class widget_t>
     void render(widget_t& widget) {
       this->set_old_data();
-      
+
       constexpr WidgetType widget_type_ = widget_t::get_widget_type();
       using return_t = typename widget_t::return_t;
-      
+
       static_assert(!std::is_same_v<return_t, void>, "a widgets return type may not be void" );
       static_assert(std::is_default_constructible_v<return_t>, "a widgets return type must be default constructible");
       static_assert(std::is_copy_constructible_v<return_t>,
 		    "a widgets return type must bet copy constructible");
 
       Context<widget_type_> context(this->instance_id_,this->old_data_, this->tree_, this->state_);
-      
+
       using args_tuple_t = typename widget_t::args_tuple_t;
       args_tuple_t args_tuple{};
 
@@ -177,4 +177,4 @@ namespace fluxpp {
   };
 
 }
-#endif //FLUXPP_RENDER_VISITOR_HPP
+#endif //FURENDER_RENDER_VISITOR_HPP
