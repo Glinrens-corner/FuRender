@@ -33,6 +33,7 @@ namespace furender{
   enum class WidgetType{
     Application,
     Client,
+    Window,
     Visual2D
   };
 }

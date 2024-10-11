@@ -56,12 +56,19 @@ namespace furender {
 
     struct widget_id_tag_t ;
     struct widget_instance_id_tag_t ;
+    struct command_type_id_tag_t;
+    struct command_instance_id_tag_t;
+    struct backend_instance_id_tag_t;
+    struct client_instance_id_tag_t;
   }
 
 
 
-  using command_type_id = uint64_t ;
-  using command_instance_id = uint64_t ;
+  using command_type_id_t = detail::Id<detail::command_type_id_tag_t> ;
+  using command_instance_id_t = detail::Id<detail::command_instance_id_tag_t> ;
+
+  using backend_instance_id_t = detail::Id<detail::backend_instance_id_tag_t> ;
+  using client_instance_id_t = detail::Id<detail::client_instance_id_tag_t> ;
 
 
 
