@@ -28,6 +28,7 @@ namespace furender{
    */
   struct WidgetInstanceData{
   public:
+    std::optional<client_instance_id_t> context_client;
     std::shared_ptr<BaseWidget> widget;
     widget_instance_id_t parent;
     std::vector<std::pair<explicit_key_t,widget_instance_id_t> >
@@ -47,6 +48,22 @@ namespace furender{
 
     widget_instance_id_t get_next_instance_id(){
       return widget_instance_id_t( this->current_instance_value_++);
+    };
+  };
+
+
+    
+  /** @brief generator for client_instance_ids
+   *
+   */
+  class ClientIdGenerator{
+  private:
+    client_instance_id_t::value_t current_instance_value_;
+  public:
+    ClientIdGenerator(client_instance_id_t::value_t  id):current_instance_value_(id){};
+
+    client_instance_id_t get_next_instance_id(){
+      return client_instance_id_t( this->current_instance_value_++);
     };
   };
 
@@ -74,7 +91,8 @@ namespace furender{
   private:
     widget_instance_id_t root_instance_;
     std::unordered_map<widget_instance_id_t, WidgetInstanceData> render_tree_;
-    InstanceIdGenerator id_generator_{1};
+    InstanceIdGenerator widget_instance_id_generator_{1};
+    ClientIdGenerator client_id_generator_{1};
     State* state_=nullptr;
     std::deque<RenderQueueEntry> render_queue_{};
     std::unordered_set<widget_instance_id_t> widget_instances_to_update_{};
@@ -112,8 +130,8 @@ namespace furender{
 
     void empty_deletion_stack();
   public:
-    widget_instance_id_t get_next_instance_id(){
-      return this->id_generator_.get_next_instance_id();
+    widget_instance_id_t get_next_widget_instance_id(){
+      return this->widget_instance_id_generator_.get_next_instance_id();
     }
 
 

@@ -24,7 +24,7 @@ namespace furender{
 
     this->render_queue_.emplace_back(RenderQueueEntry{
 	widget_null_instance,
-	this->id_generator_.get_next_instance_id(),
+	this->widget_instance_id_generator_.get_next_instance_id(),
 	0,
 	std::move(root_widget)});
   }

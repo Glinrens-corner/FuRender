@@ -58,7 +58,7 @@ namespace furender{
       widget_instance_id_t instance_id =
 	old_child_data.has_value()
 	? old_child_data.value().first
-	: this->tree_->get_next_instance_id();
+	: this->tree_->get_next_widget_instance_id();
 
 
       //erase the id of the next rendered child_instance from the array of orphaned children.
