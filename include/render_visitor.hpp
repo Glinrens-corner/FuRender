@@ -15,11 +15,12 @@
 #include "basic.hpp"
 #include "context.hpp"
 
+#include "context_base.hpp"
 #include "id_types.hpp"
 #include "render_tree.hpp"
 #include "value_holder.hpp"
+#include "collecting_context.hpp"
 
-//#include "render_tree.hpp"
 
 #include "state.hpp"
 
@@ -53,7 +54,7 @@ namespace furender {
      * @param widget the widget whose render method is to be called.
      * @param context the context to render the widget with.
      * @param tuple the remaining arguments of the render method.
-     * @param - type deduction argument ignored.
+     * @param - type deduction argument. ignored.
      */
     template <class return_t, class widget_t,class context_t, class tuple_t, int ... numbers>
     return_t call_render(widget_t& widget, context_t & context, const tuple_t& tuple, const sequence< numbers ... >& ){
@@ -102,27 +103,16 @@ namespace furender {
   private:
     State * state_;
     RenderTree* tree_;
-    explicit_key_t key_;
-    std::shared_ptr<BaseWidget> widget_;
-    widget_instance_id_t parent_id_;
-    widget_instance_id_t instance_id_;
-    WidgetInstanceData new_data_{};
-    std::optional<WidgetInstanceData*> old_data_  = nullptr;
-    WidgetInstanceData* final_data_ptr_ = nullptr;
+    CollectingContext* collecting_context_;
   public:
     RenderVisitor(
 		  State* state,
-		  explicit_key_t key,
-		  widget_instance_id_t instance_id,
-		  std::shared_ptr<BaseWidget> widget,
-		  widget_instance_id_t parent_id,
-		  RenderTree* tree)
+		  RenderTree* tree,
+		  CollectingContext* collecting_context
+		  )
       :state_(state),
        tree_(tree),
-       key_(key),
-       widget_(std::move(widget)),
-       parent_id_(parent_id),
-       instance_id_(instance_id)
+       collecting_context_(collecting_context)
        {}
 
 
@@ -132,48 +122,45 @@ namespace furender {
      */
     template< class widget_t>
     void render(widget_t& widget) {
-      this->set_old_data();
 
-      constexpr WidgetType widget_type_ = widget_t::get_widget_type();
+      constexpr WidgetType widget_type = widget_t::get_widget_type();
       using return_t = typename widget_t::return_t;
+
+
+
+      Context<widget_type> context =
+	Context<widget_type>(this->collecting_context_->instance_id,
+			     this->tree_,
+			     this->state_);
+
+
+      // set up a tuple with the arguments for the widget render method
+      using args_tuple_t = typename widget_t::args_tuple_t;
+      args_tuple_t args_tuple{};
+      detail::fill_args_tuple<0>(args_tuple, widget.selectors(), *this->state_);
+
+
+      // apply the arguments to the render method
+      using sequence_t =  typename detail::sequence_generator<std::tuple_size_v<args_tuple_t > >::sequence_t;
+      this->collecting_context_->return_value =
+	std::make_unique<ValueHolder<return_t>>(
+						detail::call_render<return_t>(widget , context, args_tuple,  sequence_t() )
+
+						);// this actually renders the widget
+
+      // inform the context that the rendering has finished.
+      context->finalize_render();
+      return;
 
       static_assert(!std::is_same_v<return_t, void>, "a widgets return type may not be void" );
       static_assert(std::is_default_constructible_v<return_t>, "a widgets return type must be default constructible");
       static_assert(std::is_copy_constructible_v<return_t>,
 		    "a widgets return type must bet copy constructible");
 
-      Context<widget_type_> context(this->instance_id_,this->old_data_, this->tree_, this->state_);
-
-      using args_tuple_t = typename widget_t::args_tuple_t;
-      args_tuple_t args_tuple{};
-
-      detail::fill_args_tuple<0>(args_tuple, widget.selectors(), *this->state_);
-
-      using sequence_t =  typename detail::sequence_generator<std::tuple_size_v<args_tuple_t > >::sequence_t;
-
-      this->new_data_.widget = this->widget_;
-      this->new_data_.parent = this->parent_id_;
-      this->new_data_.return_value =
-	std::make_unique<ValueHolder<return_t>>(
-						detail::call_render<return_t>(widget , context, args_tuple,  sequence_t() )
-						);// this renders the widget
-      this->new_data_.children = context.get_children();
-      for ( auto instance: context.get_orphaned_children()){
-	this->tree_->delete_instance(instance);
-      }
-      this->finalize();
-      return;
     }
 
 
 
-    WidgetInstanceData* get_child_instance_data_ptr(){
-      return this->final_data_ptr_;
-    }
-  private:
-    void set_old_data();
-
-    void finalize();
   };
 
 }

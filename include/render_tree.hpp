@@ -17,24 +17,10 @@
 #include "value_holder.hpp"
 #include "id_types.hpp"
 #include "widget_fwd.hpp"
-
+#include "widget_instance_data.hpp"
 
 
 namespace furender{
-
-
-  /** @brief struct that holds all information of a given widget instance
-   *
-   */
-  struct WidgetInstanceData{
-  public:
-    std::optional<client_instance_id_t> context_client;
-    std::shared_ptr<BaseWidget> widget;
-    widget_instance_id_t parent;
-    std::vector<std::pair<explicit_key_t,widget_instance_id_t> >
-    children{};  // mapping (widget of subinstance, occurrence of that widget) -> instance
-    std::unique_ptr<ValueHolderBase> return_value{};
-  };
 
 
   /** @brief generator for widget_instance_ids
@@ -52,7 +38,7 @@ namespace furender{
   };
 
 
-    
+
   /** @brief generator for client_instance_ids
    *
    */
