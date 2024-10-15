@@ -1,0 +1,48 @@
+---
+Language:        Cpp
+AlignAfterOpenBracket: DontAlign
+AlignArrayOfStructures: Left
+AlignConsecutiveAssignments: None
+AlignConsecutiveBitFields: None
+AlignConsecutiveDeclarations: None
+AlignConsecutiveMacros: AcrossEmptyLinesAndComments
+AlignEscapedNewlines: Left
+AlignOperands: AlignAfterOperator
+AlignTrailingComments: true
+AllowAllParametersOfDeclarationOnNextLine: true
+AllowShortBlocksOnASingleLine: Always
+AllowShortEnumsOnASingleLine: false 
+AllowShortFunctionsOnASingleLine: Inline
+AllowShortIfStatementsOnASingleLine: WithoutElse
+AllowShortLambdasOnASingleLine: All
+AllowShortLoopsOnASingleLine : true
+AlwaysBreakAfterReturnType : None
+AlwaysBreakBeforeMultilineStrings : false
+AlwaysBreakTemplateDeclarations : Yes
+BinPackParameters : false
+BreakBeforeBraces : Attach
+BreakBeforeTernaryOperators : true  
+BreakConstructorInitializers: BeforeColon
+BreakInheritanceList : BeforeColon
+BreakStringLiterals : false
+ColumnLimit : 80
+CompactNamespaces : false
+ConstructorInitializerIndentWidth : 2
+ContinuationIndentWidth : 2
+EmptyLineAfterAccessModifier : Never
+EmptyLineBeforeAccessModifier : Always
+FixNamespaceComments : true
+IncludeBlocks : Regroup
+IndentAccessModifiers : true
+IndentCaseBlocks : false
+IndentCaseLabels : false
+IndentPPDirectives : None
+IndentWidth : 2
+IndentWrappedFunctionNames : true
+NamespaceIndentation : All
+PackConstructorInitializers : CurrentLine
+PointerAlignment : Right
+ReferenceAlignment : Left
+SpaceBeforeAssignmentOperators : true
+SpaceBeforeCtorInitializerColon : false
+Standard : c++17
