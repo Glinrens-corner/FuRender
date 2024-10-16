@@ -82,7 +82,6 @@ namespace furender {
 	  assert(false && "no value from this selector");
 	}
 
-
 	// fill the next field of the tuple
 	fill_args_tuple<i+1>(args_tuple, selector_tuple, state);
       } else{
@@ -129,7 +128,7 @@ namespace furender {
 
 
       Context<widget_type> context =
-	Context<widget_type>(this->collecting_context_->instance_id,
+	Context<widget_type>(this->collecting_context_,
 			     this->tree_,
 			     this->state_);
 
@@ -142,14 +141,14 @@ namespace furender {
 
       // apply the arguments to the render method
       using sequence_t =  typename detail::sequence_generator<std::tuple_size_v<args_tuple_t > >::sequence_t;
-      this->collecting_context_->return_value =
+      this->collecting_context_->new_instance_data.value().return_value =
 	std::make_unique<ValueHolder<return_t>>(
 						detail::call_render<return_t>(widget , context, args_tuple,  sequence_t() )
 
 						);// this actually renders the widget
 
       // inform the context that the rendering has finished.
-      context->finalize_render();
+      //      context->finalize_render();
       return;
 
       static_assert(!std::is_same_v<return_t, void>, "a widgets return type may not be void" );

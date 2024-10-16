@@ -23,7 +23,7 @@ TEST_CASE("simple render ()", "[render][State][Widget][RenderTree]"){
   State state{};
   RenderTree tree(widget, &state);
   REQUIRE(spy==0);
-  tree.do_render();
+  tree.render_all();
 
   CHECK(spy==4);
 }
@@ -58,7 +58,7 @@ TEST_CASE("simple render of a widget referencing state", "[render][State][Widget
     auto & slice_data = state.debug_get_slices().at(addressor.path());
     REQUIRE(slice_data.subscriptions.size() == 0);
   }
-  tree.do_render();
+  tree.render_all();
   CHECK(spy==4);
 }
 
@@ -91,12 +91,12 @@ TEST_CASE("render without update", "[render][State][Widget][RenderTree]"){
   RenderTree tree(widget, &state );
   CHECK(spy1==0);
   CHECK(spy2==100);
-  tree.do_render();
+  tree.render_all();
   CHECK(spy1==1);
   CHECK(spy2==101);
   SECTION("furender tracks if a widget has to be updated"){
 
-    tree.do_render();
+    tree.render_all();
     CHECK(spy1==1);
     CHECK(spy2==101);
 
@@ -141,11 +141,11 @@ TEST_CASE("render with update", "[render][State][Widget][RenderTree][StateSlice]
   state.set_render_tree(&tree);
   REQUIRE(spy1==0);
   REQUIRE(spy2==100);
-  tree.do_render();
+  tree.render_all();
   CHECK(spy1==1);
   CHECK(spy2==101);
   SECTION("if the state_slice hasn't been updated, the next render doesn't render anything"){
-    tree.do_render();
+    tree.render_all();
     CHECK(spy1==1);
     CHECK(spy2==101);
 
@@ -174,7 +174,7 @@ TEST_CASE("render with update", "[render][State][Widget][RenderTree][StateSlice]
       CHECK(tree.debug_get_widget_instances_to_update().size() == 1);
     }
 
-    tree.do_render();
+    tree.render_all();
     {
       CHECK(tree.debug_get_render_tree().size() == 2);
       CHECK(tree.debug_get_root_instance()!= widget_null_instance);

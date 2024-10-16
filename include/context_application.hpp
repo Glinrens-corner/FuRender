@@ -22,17 +22,14 @@ namespace furender{
   template <>
   class Context<WidgetType::Application>{
   private:
-    widget_instance_id_t instance_id_; // id of the instance the context is used when rendering
     CollectingContext * collecting_context_= nullptr;
     RenderTree* tree_;
     State * state_;
 
   public:
-    Context(widget_instance_id_t instance_id,
-	    CollectingContext* collecting_context,
+    Context(CollectingContext* collecting_context,
 	    RenderTree* tree,
 	    State* state ):
-      instance_id_(instance_id),
       collecting_context_(collecting_context),
       tree_(tree),
       state_(state){
@@ -59,18 +56,16 @@ namespace furender{
     return_t immediate_render(explicit_key_t key, std::shared_ptr<Widget<WidgetType::Client,  return_t> > widget){
 
       // creating a new CollectingContext for the newly rendered context.
-      std::unique_ptr<CollectingContext> child_collecting_context_uptr{};
+      std::unique_ptr<CollectingContext> child_collecting_context_uptr = std::make_unique<CollectingContext>() ;
       CollectingContext* child_collecting_context = child_collecting_context_uptr.get();
-      this->collecting_context_->subcontexts.push_back({key, std::move(child_collecting_context_uptr)});
+      this->collecting_context_->new_instance_data.value().subcontexts.push_back({key, std::move(child_collecting_context_uptr)});
 
-      child_collecting_context->parent_id = this->instance_id_;
-      child_collecting_context->widget = std::move(widget);
 
-      detail::Renderer(this->tree_, this->state_).render_internal(key,this->instance_id_,child_collecting_context);
+      detail::Renderer(this->tree_, this->state_).render_internal(key,this->collecting_context_->instance_id,std::move(widget),child_collecting_context);
 
-      ValueHolderBase* base = child_collecting_context->is_old_data_current
+      ValueHolderBase* base = child_collecting_context->old_instance_data.has_value()
 	? child_collecting_context->old_instance_data.value()->return_value.get()
-	: child_collecting_context->return_value.get();
+	: child_collecting_context->new_instance_data.value().return_value.get();
 
       const ValueHolder<return_t>* derived =  dynamic_cast<const ValueHolder<return_t>*>(base);
       if(derived){

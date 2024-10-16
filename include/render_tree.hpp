@@ -13,6 +13,7 @@
 #include <unordered_set>
 
 #include "basic.hpp"
+#include "collecting_context.hpp"
 #include "state.hpp"
 #include "value_holder.hpp"
 #include "id_types.hpp"
@@ -75,14 +76,15 @@ namespace furender{
     using debug_render_queue_entry_t = RenderQRenderQueueEntry;
 #endif
   private:
-    widget_instance_id_t root_instance_;
+    std::optional<widget_instance_id_t> root_instance_{};
     std::unordered_map<widget_instance_id_t, WidgetInstanceData> render_tree_;
     InstanceIdGenerator widget_instance_id_generator_{1};
     ClientIdGenerator client_id_generator_{1};
     State* state_=nullptr;
     std::deque<RenderQueueEntry> render_queue_{};
     std::unordered_set<widget_instance_id_t> widget_instances_to_update_{};
-    std::vector<widget_instance_id_t> deletion_stack_{};
+    std::unordered_set<widget_instance_id_t> deletion_set_{};
+    std::shared_ptr<DeferredWidget<WidgetType::Application>> root_widget_;
   public:
     RenderTree(std::shared_ptr<DeferredWidget<WidgetType::Application>> root_widget,
 	       State* state);
@@ -90,25 +92,24 @@ namespace furender{
     /** @brief render all widgets in the render tree that have to be rendered.
      *
      */
-    void do_render();
+    void render_all();
 
-    /** add a freshly rendered instance to the render_tree.
+    /** @brief add a freshly rendered instance to the render_tree.
      *
      *
      */
     WidgetInstanceData* insert_instance(widget_instance_id_t , WidgetInstanceData&&);
 
-    /** @brief get the pointer to the datao of an instance.
+    /** @brief get the pointer to the data of an instance.
      *
      * if the return  has a value, it is dereferencable.
      */
-    std::optional<WidgetInstanceData*> get_render_node_ptr(widget_instance_id_t);
+    std::optional<WidgetInstanceData*> get_widget_instance_data(widget_instance_id_t);
 
     /** @brief check if an instance has to be updated
      *
      */
     bool has_to_be_updated(widget_instance_id_t instance_id)const;
-
 
     void set_render_node(widget_instance_id_t id, WidgetInstanceData&& new_node);
 
@@ -116,12 +117,17 @@ namespace furender{
 
     void empty_deletion_stack();
   public:
+    /** @brief get a new @c widget_instance_id_t  
+     *
+     */
     widget_instance_id_t get_next_widget_instance_id(){
       return this->widget_instance_id_generator_.get_next_instance_id();
     }
 
 
-
+    /** /brief announce that a property (e.g. StateSlice) a widget instance depends upon has changed
+     *
+     */
     void announce_change(widget_instance_id_t instance_id){
       this->widget_instances_to_update_.insert(instance_id);
     }
@@ -135,7 +141,7 @@ namespace furender{
 
 
 #ifndef NDEBUG
-    widget_instance_id_t debug_get_root_instance(){
+    std::optional<widget_instance_id_t> debug_get_root_instance(){
 	return this->root_instance_;
     }
 #endif
@@ -166,13 +172,35 @@ namespace furender{
     }
 #endif
   private:
-    void do_render_internal();
+    void render_root(CollectingContext*);
+
+    //    void do_render_internal();
 
     void render_render_queue_entry(RenderQueueEntry&);
 
     widget_instance_id_t get_next_widget_to_update()const;
 
-    void rerender_instance(widget_instance_id_t);
+    void rerender_instance(widget_instance_id_t, CollectingContext*);
+
+    void merge_collecting_context(CollectingContext& );
+
+    /** @brief inserts or updates instance_data for a widget
+     *
+     *  - updates all subscriptions to state_slices
+     *  - marks all orphaned children for deletion
+     *  - does not change or check the parent child relationships.
+     */
+    void insert_or_update_instance(WidgetInstanceData&&, std::optional<WidgetInstanceData*> );
+
+    /** @brief remove all subscriptions for a widget instance from state
+     *
+     */
+    void remove_subscriptions_from_state(const WidgetInstanceData& );
+
+    /** @brief subscribes an instance to all relevant stateslices 
+     *
+     */
+    void subscribe_to_state(const WidgetInstanceData& );
   };
 
 }

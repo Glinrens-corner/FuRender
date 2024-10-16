@@ -29,6 +29,7 @@ namespace furender{
       // but the widget is also transferred via the collecting context
       void render_internal(explicit_key_t key,
 			   widget_instance_id_t parent_id,
+			   std::shared_ptr<BaseWidget> widget,
 			   CollectingContext* collecting_context);
 
       // determine if the child instance can be reused or has to be rerendered.

@@ -1,6 +1,7 @@
 #ifndef FURENDER_CONTEXT_CLIENT_HPP
 #define FURENDER_CONTEXT_CLIENT_HPP
 
+#include <cassert>
 #include <memory>
 #include <optional>
 #include <vector>
@@ -9,47 +10,68 @@
 #include "id_types.hpp"
 #include "context_base.hpp"
 #include "widget_fwd.hpp"
+#include "collecting_context.hpp"
+#include "renderer.hpp"
 
 namespace furender{
 
   template<>
   class Context<WidgetType::Client>{
   private:
-    widget_instance_id_t instance_id_;
-    std::optional<WidgetInstanceData *> old_data_;
+    CollectingContext * collecting_context_= nullptr;
     RenderTree* tree_;
     State * state_;
 
-    std::vector<std::pair<explicit_key_t,widget_instance_id_t> > rendered_subinstances_{};
-
   public:
-    Context(widget_instance_id_t instance_id, std::optional<WidgetInstanceData*> old_data, RenderTree* tree, State* state ):
-      instance_id_(instance_id),
-      old_data_(old_data),
+    Context(CollectingContext* collecting_context,
+	    RenderTree* tree,
+	    State* state ):
+      collecting_context_(collecting_context),
       tree_(tree),
       state_(state){
     };
 
 
+    /** @brief renders a widget
+     *
+     * is allowed to defer the rendering of the widget therefore it doesn't return the returnvalue of the widget.
+     *
+     * @param key a key to map the widget.
+     * @param widget the widget to render.
+     */
+    // not yet implemented
+    //    void render(explicit_key_t key, std::shared_ptr<DeferredWidget<WidgetType::Client> > widget)const;
 
-    void render(explicit_key_t key, std::shared_ptr<DeferredWidget<WidgetType::Visual2D> >)const;
 
+    /**@brief renders a widget and returns its return value
+     *
+     * @param key a key to map the widget.
+     * @param widget the widget to render.
+     */
     template<class return_t>
-    return_t immediate_render(explicit_key_t key, std::shared_ptr<Widget<WidgetType::Client,  return_t> > widget){
-      return {};
+    return_t immediate_render(explicit_key_t key, std::shared_ptr<Widget<WidgetType::Window,  return_t> > widget){
+
+      // creating a new CollectingContext for the newly rendered context.
+      std::unique_ptr<CollectingContext> child_collecting_context_uptr{};
+      CollectingContext* child_collecting_context = child_collecting_context_uptr.get();
+      this->collecting_context_->new_instance_data.value().subcontexts.push_back({key, std::move(child_collecting_context_uptr)});
+
+
+      detail::Renderer(this->tree_, this->state_).render_internal(key,this->collecting_context_->instance_id,std::move(widget),child_collecting_context);
+
+      ValueHolderBase* base = child_collecting_context->old_instance_data.has_value()
+	? child_collecting_context->old_instance_data.value()->return_value.get()
+	: child_collecting_context->new_instance_data.value().return_value.get();
+
+      const ValueHolder<return_t>* derived =  dynamic_cast<const ValueHolder<return_t>*>(base);
+      if(derived){
+	return derived->data;
+      } else {
+	// this should be impossible by the typesystem.
+	assert(false && "a Widget< _ ,  return_t> must return a value of type return_t");
+	//return {};
+      }
     }
-
-
-    std::vector<std::pair<explicit_key_t,widget_instance_id_t> > get_children(){
-      return this->rendered_subinstances_;
-    }
-
-
-
-    const std::vector<widget_instance_id_t>  get_orphaned_children(){
-      return {};
-    }
-
   };
 
 }
