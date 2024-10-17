@@ -1,7 +1,6 @@
 #ifndef FURENDER_RENDER_TREE_HPP
 #define FURENDER_RENDER_TREE_HPP
 
-
 #include "basic.hpp"
 #include "collecting_context.hpp"
 #include "id_types.hpp"

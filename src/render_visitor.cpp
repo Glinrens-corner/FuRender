@@ -1,8 +1,2 @@
 
-namespace furender{
-
-
-
-
-
-}
+namespace furender {}

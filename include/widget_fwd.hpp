@@ -3,25 +3,18 @@
 
 #include "basic.hpp"
 
-namespace furender{
+namespace furender {
   class BaseWidget;
 
-
-
-  template<WidgetType>
+  template <WidgetType>
   class DeferredWidget;
 
-
-
-  template <WidgetType widget_type_, class return_t_  >
+  template <WidgetType widget_type_, class return_t_>
   class Widget;
-
-
 
   template <WidgetType widget_type_, class render_fn_t_, class render_sig_t_>
   class WidgetImpl;
 
+} // namespace furender
 
-}
-
-#endif //FURENDER_WIDGET_FWD_HPP
+#endif // FURENDER_WIDGET_FWD_HPP

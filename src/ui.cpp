@@ -1,7 +1,3 @@
 #include "ui.hpp"
 
-
-namespace furender{
-
-
-}
+namespace furender {}

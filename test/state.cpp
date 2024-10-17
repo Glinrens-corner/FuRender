@@ -1,55 +1,55 @@
-#include <catch2/catch_test_macros.hpp>
-
-
-#include <memory>
+#include "state.hpp"
 
 #include "context_base.hpp"
 #include "event.hpp"
-#include "state.hpp"
 #include "widget.hpp"
 
+#include <catch2/catch_test_macros.hpp>
+#include <memory>
 
-
-TEST_CASE("test State", "[State]"){
+TEST_CASE("test State", "[State]") {
   using namespace furender;
 
-  // spies to deteckt how often the state_slice/ widget_render function are executed.
-  int slice_spy=0;
+  // spies to deteckt how often the state_slice/ widget_render function are
+  // executed.
+  int slice_spy = 0;
   int widget_spy = 0;
 
   // path were the StateSlice is located in the State.
   const std::string path = "path_to_state";
 
-
-  // we will save a  pointer  to the StateSlice to later assert properties of it.
-  TypedStateSlice<int> * slice_ptr;
+  // we will save a  pointer  to the StateSlice to later assert properties of
+  // it.
+  TypedStateSlice<int> *slice_ptr;
 
   // create a slice ()
-  auto slice_uptr = create_state_slice(static_cast<int>(1)/* initial value and type of the state*/)
-    // Set a handler for DataEvent<int>
-    //DataEvent<T> for a State containing an U requires a handler  signature of void(StateContext<U>& , const T& );
-    // in production code the handler shouldn't capture anything by reference.
-    // it has to be pureish.
-    .with_data_reducer<int>([&slice_spy](StateContext<int>& context, const int& new_int){
-      slice_spy++;
-      context.update_state(new_int);
-    })
-    .make_unique_ptr();
+  auto slice_uptr =
+    create_state_slice(
+      static_cast<int>(1) /* initial value and type of the state*/)
+      // Set a handler for DataEvent<int>
+      // DataEvent<T> for a State containing an U requires a handler  signature
+      // of void(StateContext<U>& , const T& );
+      // in production code the handler shouldn't capture anything by reference.
+      // it has to be pureish.
+      .with_data_reducer<int>(
+        [&slice_spy](StateContext<int>& context, const int& new_int) {
+          slice_spy++;
+          context.update_state(new_int);
+        })
+      .make_unique_ptr();
 
   slice_ptr = slice_uptr.get();
 
-
-
-
-  auto  app = create_widget_with_selectors<WidgetType::Application>()
-    .with_render_function([&widget_spy](Context<WidgetType::Application>&){
-      widget_spy++;
-      return None::none;
-    })
-    .make_shared();
+  auto app =
+    create_widget_with_selectors<WidgetType::Application>()
+      .with_render_function([&widget_spy](Context<WidgetType::Application>&) {
+        widget_spy++;
+        return None::none;
+      })
+      .make_shared();
 
   DataEvent<int> event{};
-  event.data=4;
+  event.data = 4;
   EventEnvelope envelope{};
   envelope.event = &event;
   envelope.path = path;
@@ -66,50 +66,50 @@ TEST_CASE("test State", "[State]"){
   {
     // state.debug_get_slices() is only for testing/debugging accessible
     REQUIRE(state.debug_get_slices().size() == 1);
-    auto& slice_data =   state.debug_get_slices().at(path);
+    auto& slice_data = state.debug_get_slices().at(path);
     REQUIRE(slice_data.subscriptions.size() == 0);
     REQUIRE(slice_data.slice.get() == slice_ptr);
   }
   state.dispatch_event(envelope);
   {
     REQUIRE(state.debug_get_slices().size() == 1);
-    auto& slice_data =   state.debug_get_slices().at(path);
+    auto& slice_data = state.debug_get_slices().at(path);
     CHECK(slice_data.subscriptions.size() == 0);
     REQUIRE(slice_data.slice.get() == slice_ptr);
   }
   CHECK(slice_ptr->state() == 4);
-  CHECK( slice_spy == 1);
+  CHECK(slice_spy == 1);
 }
 
-
-TEST_CASE("test ReducingStateSlice with a move-only reducer", "[StateSlice]"){
+TEST_CASE("test ReducingStateSlice with a move-only reducer", "[StateSlice]") {
   using namespace furender;
 
-  class NoCopyReducer{
-  private:
-    int* outer_;
-  public:
-    NoCopyReducer(int* outer):outer_(outer){};
+  class NoCopyReducer {
+    private:
+      int *outer_;
 
-    void operator()(furender::StateContext<int>& context, const int &new_int){
-      *outer_ = new_int;
-      context.update_state(new_int);
-    }
+    public:
+      NoCopyReducer(int *outer): outer_(outer){};
 
-    NoCopyReducer( const NoCopyReducer& ) = delete;
-    NoCopyReducer(  NoCopyReducer&& ) = default;
-    NoCopyReducer& operator = (const NoCopyReducer & ) = delete;
-    NoCopyReducer& operator = (NoCopyReducer && ) = default;
+      void operator()(
+        furender::StateContext<int>& context, const int& new_int) {
+        *outer_ = new_int;
+        context.update_state(new_int);
+      }
+
+      NoCopyReducer(const NoCopyReducer&) = delete;
+      NoCopyReducer(NoCopyReducer&&) = default;
+      NoCopyReducer& operator=(const NoCopyReducer&) = delete;
+      NoCopyReducer& operator=(NoCopyReducer&&) = default;
   };
 
-  int i=0;
+  int i = 0;
   auto u_ptr = create_state_slice(static_cast<int>(1))
-    .with_data_reducer<int>(NoCopyReducer(&i))
-    .make_unique_ptr();
-
+                 .with_data_reducer<int>(NoCopyReducer(&i))
+                 .make_unique_ptr();
 
   DataEvent<int> event{};
-  event.data=4;
+  event.data = 4;
   EventEnvelope envelope{};
   envelope.event = &event;
   envelope.path = "path_to_state";

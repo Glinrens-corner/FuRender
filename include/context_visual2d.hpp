@@ -3,16 +3,14 @@
 
 #include "context_base.hpp"
 
-namespace furender{
+namespace furender {
 
   template <>
-  class Context<WidgetType::Visual2D>{
-  public:
-    Context(WidgetInstanceData* , RenderTree* ){};
-
+  class Context<WidgetType::Visual2D> {
+    public:
+      Context(WidgetInstanceData *, RenderTree *){};
   };
 
-}
+} // namespace furender
 
-
-#endif //FURENDER_CONTEXT_VISUAL2D_HPP
+#endif // FURENDER_CONTEXT_VISUAL2D_HPP

@@ -2,19 +2,10 @@
 #define FURENDER_XCB_BACKEND_HPP
 #include "backend.hpp"
 
-namespace xcb{
+namespace xcb {
 
-  class XCBBackendImpl:
-    public furender::Backend{
+  class XCBBackendImpl : public furender::Backend {};
 
+} // namespace xcb
 
-
-
-  };
-
-
-}
-
-
-
-#endif //FURENDER_XCB_BACKEND_HPP
+#endif // FURENDER_XCB_BACKEND_HPP
