@@ -1,3 +1,4 @@
+
 #include <memory>
 #include <optional>
 #include <tuple>
@@ -62,14 +63,16 @@ namespace furender{
       this->merge_collecting_context(collection_context);
       //otherwise rerender all instances to create
     } else {
+
       while(!this->widget_instances_to_update_.empty()){
 	if(not this->root_instance_.has_value()){
 	  assert(false && "error: no tree, but instances in the tree to update??");
 	  break;
 	}
-	
+
 	CollectingContext collection_context;
-	this->rerender_instance(this->get_next_widget_to_update(), &collection_context);
+	auto next_instance = this->get_next_widget_to_update();
+	this->rerender_instance(next_instance, &collection_context);
 	while( !this->render_queue_.empty() ){
 	  RenderQueueEntry& entry = this->render_queue_.back();
 	  this->render_render_queue_entry(entry);
@@ -88,9 +91,9 @@ namespace furender{
     assert(this->root_widget_);
     detail::Renderer(this, this->state_).render_internal(0/* doesn't matter*/, widget_null_instance, this->root_widget_, collecting_context);
     assert(collecting_context->new_instance_data.has_value() && "root widget needs to be newly rendered." );
-    this->root_instance_ = collecting_context->instance_id;    
+    this->root_instance_ = collecting_context->instance_id;
   }
-  
+
   void RenderTree::render_render_queue_entry(RenderQueueEntry &entry){
 
 #ifndef NDEBUG
@@ -123,7 +126,7 @@ namespace furender{
       key = mapping_it->first;
     }
 
-    
+
     detail::Renderer(this, this->state_).render_internal(key,  child_it->second.parent_id,child_it->second.widget , collecting_context);
   }
 
@@ -148,12 +151,12 @@ namespace furender{
   }
 
 
-  /** @brief merges a tree of collecting contexts 
+  /** @brief merges a tree of collecting contexts
    *
    *
    */
   void RenderTree::merge_collecting_context(CollectingContext& root_collecting_context){
-    // walking the tree of collecting_contexts in a DFS. 
+    // walking the tree of collecting_contexts in a DFS.
     std::vector<CollectingContext*>collecting_context_stack{&root_collecting_context};
     while(not collecting_context_stack.empty()){
       // while stack_top has children, push a new (pointer to context) onto the stack
@@ -176,9 +179,8 @@ namespace furender{
 	  // ... but the old instance data must be present.
 	  assert(current_context.old_instance_data.has_value() && "if the old instance has all data, it must be set. ");
 
-          // the key could have updated.
-	  current_context.old_instance_data.value()->key = current_context.key;
-	  
+	  auto instance_id = current_context.instance_id;
+	  assert(this->widget_instances_to_update_.erase(instance_id) == 0 && "if the old data is sufficient for the instance, it shouldn't be marked 'to update'");
 	  if(collecting_context_stack.size() > 0  ){
 	    CollectingContext& parent_context = **(collecting_context_stack.rbegin());
 	    assert(parent_context.new_instance_data.has_value() && "if there are subcontexts, the parent_context must be recreated.  and ave data for the new creation");
@@ -191,11 +193,10 @@ namespace furender{
 	    assert(current_context.parent_id == parent_context.instance_id && "the parent id must be the instance id of the parent ");
 
             assert(current_context.instance_id == current_context.old_instance_data.value()->instance_id && "the context and the widget_instance_data must have the same id" );
-	    
+
 	    parent_context.new_instance_data.value().children.emplace_back(key, current_context.instance_id);
 	    parent_context.new_instance_data.value().subcontexts.pop_back();
 	  }
-	  
 	} else {
 	  WidgetInstanceData instance_data{};
 	  assert( (current_context.instance_id != widget_instance_id_t{} ) && "a new instance_id has to have been set.");
@@ -210,18 +211,30 @@ namespace furender{
 
 	  assert(current_context.new_instance_data.value().return_value);
 	  instance_data.return_value = std::move(current_context.new_instance_data.value().return_value);
+          this->insert_or_update_instance(std::move(instance_data), current_context.old_instance_data);
 
 	  if(collecting_context_stack.size() > 0  ){
 	    CollectingContext& parent_context = **(collecting_context_stack.rbegin());
-	    assert(parent_context.new_instance_data.has_value() && "if there are subcontexts, the parent_context must be recreated.  and ave data for the new creation");
-	    // using the fact, that we always push a pointer to the last subcontext onto the stack. therefore the last subcontext of parent ist the current context
-            auto& [key, collecting_context_uptrref /*unused */ ]= parent_context.new_instance_data.value().subcontexts.back();
-	    assert(collecting_context_uptrref.get()== &current_context && "the accessed subcontext of the parent must be the same as the current context");
+	    assert(parent_context.new_instance_data.has_value()
+		   && "if there are subcontexts, the parent_context must be recreated"
+		   "  and have data for the new creation");
+	    // using the fact, that we always push a pointer to the last subcontext
+	    //onto the stack. therefore the last subcontext of parent ist the current context
+            auto& [key, collecting_context_uptrref /*unused */ ]
+	      = parent_context
+	      .new_instance_data
+	      .value().subcontexts.back();
+	    assert(collecting_context_uptrref.get()== &current_context
+		   && "the accessed subcontext of the parent must be the same as the current context");
 
 	    if(current_context.old_instance_data.has_value()){
-	      assert(current_context.old_instance_data.value()->parent_id == current_context.parent_id && " the context parent_id and the widget_instance_data parent_id must be the same.");
+	      assert(current_context.old_instance_data.value()->parent_id
+		     == current_context.parent_id
+		     && " the context parent_id and the widget_instance_data parent_id must be the same.");
 	    }
-            assert(current_context.parent_id == parent_context.instance_id && "the parent id must be the instance id of the parent ");
+
+            assert(current_context.parent_id == parent_context.instance_id
+		   && "the parent id must be the instance id of the parent ");
 
 	    if(current_context.old_instance_data.has_value()){
 	      assert(current_context.instance_id == current_context.old_instance_data.value()->instance_id && "the context and the widget_instance_data must have the same id" );
@@ -229,7 +242,6 @@ namespace furender{
 	    parent_context.new_instance_data.value().children.emplace_back(key, current_context.instance_id);
 	    parent_context.new_instance_data.value().subcontexts.pop_back();
 	  }
-	  this->insert_or_update_instance(std::move(instance_data), current_context.old_instance_data);
 	}
       }
     }
@@ -238,6 +250,7 @@ namespace furender{
 
 
   void RenderTree::insert_or_update_instance(WidgetInstanceData&& new_data,std::optional<WidgetInstanceData*> old_data_optr ){
+
     if (old_data_optr.has_value()){
       WidgetInstanceData& old_data = *old_data_optr.value();
       this->remove_subscriptions_from_state(old_data);
@@ -271,7 +284,7 @@ namespace furender{
 	}
       }
   }
-  
+
 
 
   void RenderTree::subscribe_to_state(const WidgetInstanceData& instance_data){
@@ -279,13 +292,13 @@ namespace furender{
 
       std::optional<std::reference_wrapper<const std::string>>     path_opt = instance_data.widget->get_nth_selector_address(ipath);
 	if(path_opt.has_value()){
-	  this->state_->remove_subscription( path_opt.value().get(),instance_data.instance_id);
+	  this->state_->accept_subscription( path_opt.value().get(), instance_data.instance_id);
 	}else {
 	  break;
 	}
       }
   }
-  
+
 
 
   /** @brief removes references instance from all
@@ -309,7 +322,7 @@ namespace furender{
   }
 
 
-  
+
 
   WidgetInstanceData* RenderTree::insert_instance(widget_instance_id_t instance_id, WidgetInstanceData&& data){
     // Todo dispose of the old widgetInstance

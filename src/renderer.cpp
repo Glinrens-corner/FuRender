@@ -2,6 +2,8 @@
 #include "renderer.hpp"
 #include "id_types.hpp"
 #include "widget.hpp"
+#include "widget_instance_data.hpp"
+#include <optional>
 
 namespace furender{
   namespace detail{
@@ -9,14 +11,20 @@ namespace furender{
 				   widget_instance_id_t parent_id,
 				   std::shared_ptr<BaseWidget> widget,
 				   CollectingContext* collecting_context){
-      
+
       BaseWidget* widget_ptr = widget.get();
       collecting_context->parent_id = parent_id;
       collecting_context->widget = std::move(widget);
 
-      
-      std::optional<std::pair<widget_instance_id_t,WidgetInstanceData*>> old_data = this->get_old_instance_data( key, parent_id);
+      std::optional<std::pair<widget_instance_id_t,WidgetInstanceData*>>
+	old_data;
+      if (parent_id != widget_null_instance){
+	old_data = this->get_old_instance_data( key, parent_id);
+      }else  {
+	// we render the root instance
+	old_data = this->get_root_instance_data( );
 
+      }
 
       // if there is old data, it is the same instance so reuse the instance id
       widget_instance_id_t instance_id =
@@ -40,7 +48,7 @@ namespace furender{
       }
 
       collecting_context->new_instance_data.emplace();
-      
+
       RenderVisitor visitor(this->state_,
 			    this->render_tree_,
 			    collecting_context
@@ -73,6 +81,19 @@ namespace furender{
       }
 
     }
+
+
+
+    std::optional<std::pair<widget_instance_id_t, WidgetInstanceData*> >
+    Renderer::get_root_instance_data(){
+      std::optional<WidgetInstanceData*> bare_root_data = this->render_tree_->get_root_instance_data();
+      if(bare_root_data.has_value()){
+	return std::make_pair(bare_root_data.value()->instance_id, bare_root_data.value());
+      }else {
+	return {};
+      }
+    }
+
 
 
     bool Renderer::subinstance_is_current(const BaseWidget& widget, widget_instance_id_t instance_id, const WidgetInstanceData& data)const{
