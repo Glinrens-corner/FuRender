@@ -16,7 +16,7 @@ namespace furender{
   struct WidgetInstanceData{
   public:
     widget_instance_id_t instance_id;
-    widget_instance_id_t client_id;
+    client_instance_id_t client_id;
     std::shared_ptr<BaseWidget> widget;
     widget_instance_id_t parent_id;
     explicit_key_t key;

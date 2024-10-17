@@ -16,7 +16,7 @@ namespace furender{
       collecting_context->parent_id = parent_id;
       collecting_context->widget = std::move(widget);
 
-      std::optional<std::pair<widget_instance_id_t,WidgetInstanceData*>>
+      std::optional<WidgetInstanceData*>
 	old_data;
       if (parent_id != widget_null_instance){
 	old_data = this->get_old_instance_data( key, parent_id);
@@ -29,20 +29,17 @@ namespace furender{
       // if there is old data, it is the same instance so reuse the instance id
       widget_instance_id_t instance_id =
 	old_data.has_value()
-	? old_data.value().first
+	? old_data.value()->instance_id
 	: this->render_tree_->get_next_widget_instance_id();
       collecting_context->instance_id = instance_id;
 
 
       // set old instance data.
-      collecting_context->old_instance_data =
-	old_data.has_value()
-	? old_data.value().second
-	: std::optional<WidgetInstanceData*>{};
+      collecting_context->old_instance_data = old_data;
 
       // if the old instance is still current, return the value of the last execution.
       if (old_data.has_value()){
-	if (this->subinstance_is_current( *widget_ptr, instance_id,  *old_data.value().second) ){
+	if (this->subinstance_is_current( *widget_ptr, instance_id,  *old_data.value()) ){
 	  return ;
 	}
       }
@@ -61,7 +58,7 @@ namespace furender{
 
 
 
-    std::optional<std::pair<widget_instance_id_t, WidgetInstanceData*> > Renderer::get_old_instance_data(explicit_key_t key, widget_instance_id_t parent_id ) const{
+    std::optional< WidgetInstanceData*>  Renderer::get_old_instance_data(explicit_key_t key, widget_instance_id_t parent_id ) const{
       auto parent_optr = this->render_tree_->get_widget_instance_data(parent_id);
       if (not parent_optr.has_value()) return {};
       WidgetInstanceData* parent_ptr = parent_optr.value();
@@ -75,7 +72,7 @@ namespace furender{
       if (it != parent_ptr->children.end()){
 	auto child_optr = this->render_tree_->get_widget_instance_data(it->second);
 	assert(child_optr.has_value() && "parent is in tree but child not?");
-	return  std::make_pair(it->second,child_optr.value());
+	return  child_optr.value();
       }else {
 	return {};
       }
@@ -84,14 +81,9 @@ namespace furender{
 
 
 
-    std::optional<std::pair<widget_instance_id_t, WidgetInstanceData*> >
+    std::optional< WidgetInstanceData*> 
     Renderer::get_root_instance_data(){
-      std::optional<WidgetInstanceData*> bare_root_data = this->render_tree_->get_root_instance_data();
-      if(bare_root_data.has_value()){
-	return std::make_pair(bare_root_data.value()->instance_id, bare_root_data.value());
-      }else {
-	return {};
-      }
+      return this->render_tree_->get_root_instance_data();
     }
 
 

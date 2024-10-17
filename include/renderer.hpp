@@ -40,11 +40,11 @@ namespace furender {
         // previous render. note: is called in render and therefore before we
         // have determined the children instances id indeed if there is an old
         // instance this determines that instances id which will be reused.
-        std::optional<std::pair<widget_instance_id_t, WidgetInstanceData *>>
+        std::optional< WidgetInstanceData *>
           get_old_instance_data(
             explicit_key_t key, widget_instance_id_t parent) const;
 
-        std::optional<std::pair<widget_instance_id_t, WidgetInstanceData *>>
+        std::optional< WidgetInstanceData *>
           get_root_instance_data();
     };
   } // namespace detail
