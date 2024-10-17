@@ -21,7 +21,7 @@ namespace furender{
       StateDispatchVisitor visitor(envelope);
       bool updated = it->second.slice->accept_dispatch_visitor(visitor);
       if(updated){
-	for (const widget_instance_id_t instance_id: it->second.subscriptions){
+	for (const widget_instance_id_t& instance_id: it->second.subscriptions){
 
           this->render_tree_->announce_change(instance_id) ;
 	}
